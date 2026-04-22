@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  ygoapi:
+    build:
+      context: .
+      dockerfile: YGOApi/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__CardConnection=Server=db;Port=3306;Database=cards_db;User=root;Password=rootpass;
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - ygonet
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: cards_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ygonet
+
+volumes:
+  db_data:
+
+networks:
+  ygonet:
+    driver: bridge

@@ -1,19 +1,24 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System.Threading;
 using YGOApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("CardConnection");
 
+
 builder.Services.AddDbContext<CardContext>(opts =>
-    opts.UseMySql(builder.Configuration.GetConnectionString("CardConnection"),
-        new MySqlServerVersion(new Version(8, 0, 31))));
+    opts.UseMySql(connectionString,
+        new MySqlServerVersion(new Version(8, 0, 31)),
+        mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 // Add services to the container.
 
 builder.Services.AddControllers().AddNewtonsoftJson();
@@ -36,10 +41,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
+// Apply EF Core migrations at startup with simple retry to wait for the DB to be ready
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var db = services.GetRequiredService<CardContext>();
+    const int maxRetries = 10;
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            db.Database.Migrate();
+            logger.LogInformation("Database migrations applied.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Database migration attempt {Attempt} of {Max} failed.", attempt, maxRetries);
+            if (attempt == maxRetries) throw;
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+        }
+    }
+}
 
 app.Run();
