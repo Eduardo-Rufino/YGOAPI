@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using YGOApi.Data;
 using YGOApi.Data.Dtos;
+using YGOApi.Integrations;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;
@@ -16,11 +17,13 @@ public class CardController : ControllerBase
 
     private CardContext _context;
     private IMapper _mapper;
+    private ICardProvider _provider;
 
-    public CardController(CardContext context, IMapper mapper)
+    public CardController(CardContext context, IMapper mapper, ICardProvider provider)
     {
         _context = context;
         _mapper = mapper;
+        _provider = provider;
     }
 
     /// <summary>
@@ -94,5 +97,14 @@ public class CardController : ControllerBase
         _context.Remove(card);
         _context.SaveChanges();
         return NoContent();
+    }
+
+
+    [HttpGet("Provider/{collectionName}")]
+    public IActionResult GetCardByProviderCollection(string collectionName)
+    {
+        var cards = _provider.ListCardByColection(collectionName);
+
+        return Ok(cards);
     }
 }
