@@ -1,10 +1,11 @@
-﻿using YGOApi.Models;
+﻿using YGOApi.Data.Dtos.YgoProDeck;
+using YGOApi.Models;
 
 namespace YGOApi.Integrations
 {
     public interface ICardProvider
     {
-        List<Card> ListCardByColection(string colectionName);
+        Task<YgoProDeckDto> ListCardByCollection(string colectionName);
 
 
     }

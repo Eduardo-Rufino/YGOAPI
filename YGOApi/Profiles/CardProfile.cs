@@ -1,6 +1,7 @@
-﻿using YGOApi.Data.Dtos;
+﻿using AutoMapper;
+using YGOApi.Data.Dtos;
+using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Models;
-using AutoMapper;
 
 namespace YGOApi.Profiles
 {
@@ -11,7 +12,7 @@ namespace YGOApi.Profiles
             CreateMap<CreateCardDto, Card>();
             CreateMap<UpdateCardDto, Card>();
             CreateMap<Card, UpdateCardDto>();
-            CreateMap<Card, ReadCardDto>();
+            CreateMap<Card, ReadCardDto>();            
         }
     }
 }

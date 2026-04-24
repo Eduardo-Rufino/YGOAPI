@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using YGOApi.Data;
 using YGOApi.Data.Dtos;
+using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Integrations;
 using YGOApi.Models;
 
@@ -101,10 +102,25 @@ public class CardController : ControllerBase
 
 
     [HttpGet("Provider/{collectionName}")]
-    public IActionResult GetCardByProviderCollection(string collectionName)
+    public async Task<IActionResult> GetCardByProviderCollection(string collectionName)
     {
-        var cards = _provider.ListCardByColection(collectionName);
+        var response = await _provider.ListCardByCollection(collectionName);
+        
+        return Ok(response);
+    }
 
-        return Ok(cards);
+    [HttpPost("Provider/AddCardProvider")]
+    public IActionResult AddCardsProvider([FromBody] List<YgoProDeckCardDto> cardList)
+    {
+        List<Card> cards = new List<Card>();
+
+        foreach (var card in cardList)
+        { 
+            var c = CardFactory.CreateCardFromYgoProDeckDto(card);
+            cards.Add(c);
+        }
+        _context.Cards.AddRange(cards);
+        _context.SaveChanges();
+        return NoContent();
     }
 }
