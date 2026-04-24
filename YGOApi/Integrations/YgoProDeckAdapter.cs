@@ -1,5 +1,4 @@
-﻿using RestSharp;
-using YGOApi.Data.Dtos.YgoProDeck;
+﻿using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Models;
 
 namespace YGOApi.Integrations
