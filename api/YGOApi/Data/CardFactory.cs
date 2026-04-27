@@ -24,6 +24,7 @@ namespace YGOApi.Data
                 PendulumScale = dto.Scale,
                 LinkRating = dto.LinkVal,
                 LinkMarkers = dto.LinkMarkers != null ? string.Join(",", dto.LinkMarkers) : null,
+                ImageUrl = dto.CardImages[0].ImageUrl,
             };
         }
     

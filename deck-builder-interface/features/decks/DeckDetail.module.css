@@ -1,0 +1,74 @@
+.container {
+  max-width: 1000px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+}
+
+.header {
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+:global(.dark) .title {
+  color: #f9fafb;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+:global(.dark) .card {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.cardName {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+:global(.dark) .cardName {
+  color: #f9fafb;
+}
+
+.cardType {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.backBtn {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+}

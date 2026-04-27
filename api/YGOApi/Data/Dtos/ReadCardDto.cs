@@ -42,6 +42,8 @@ namespace YGOApi.Data.Dtos
 
         public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 
+        public string? ImageUrl { get; set; }
+
         public DateTime HoraDaConsulta { get; set; } = DateTime.Now;
     }
 }

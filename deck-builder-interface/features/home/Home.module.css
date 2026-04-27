@@ -1,0 +1,119 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  padding: 2rem;
+  text-align: center;
+  background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.05), transparent 40%),
+              radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.05), transparent 40%);
+}
+
+.hero {
+  max-width: 800px;
+}
+
+.title {
+  font-size: clamp(3rem, 8vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.04em;
+  color: #111827;
+}
+
+:global(.dark) .title {
+  color: #f9fafb;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #4b5563;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+:global(.dark) .subtitle {
+  color: #9ca3af;
+}
+
+.cta {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #6366f1;
+  color: white;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+}
+
+.bannersSection {
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 6rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.bannerCard {
+  position: relative;
+  padding: 2.5rem;
+  border-radius: 24px;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bannerCard:hover {
+  transform: translateY(-8px);
+}
+
+.bannerCollections {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  box-shadow: 0 20px 40px -10px rgba(30, 27, 75, 0.4);
+}
+
+.bannerBanList {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+  box-shadow: 0 20px 40px -10px rgba(69, 10, 10, 0.4);
+}
+
+.bannerMeta {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  box-shadow: 0 20px 40px -10px rgba(6, 78, 59, 0.4);
+}
+
+.bannerTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.bannerDesc {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.bannerIcon {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 8rem;
+  opacity: 0.1;
+  color: white;
+  pointer-events: none;
+}
