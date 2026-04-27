@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using YGOApi.Data;
 using YGOApi.Data.Dtos;
+using YGOApi.Data.Dtos.YgoProDeck;
+using YGOApi.Integrations;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;
@@ -16,11 +18,13 @@ public class CardController : ControllerBase
 
     private CardContext _context;
     private IMapper _mapper;
+    private ICardProvider _provider;
 
-    public CardController(CardContext context, IMapper mapper)
+    public CardController(CardContext context, IMapper mapper, ICardProvider provider)
     {
         _context = context;
         _mapper = mapper;
+        _provider = provider;
     }
 
     /// <summary>
@@ -92,6 +96,30 @@ public class CardController : ControllerBase
             card => card.Id == id);
         if (card == null) return NotFound();
         _context.Remove(card);
+        _context.SaveChanges();
+        return NoContent();
+    }
+
+
+    [HttpGet("Provider/{collectionName}")]
+    public async Task<IActionResult> GetCardByProviderCollection(string collectionName)
+    {
+        var response = await _provider.ListCardByCollection(collectionName);
+        
+        return Ok(response);
+    }
+
+    [HttpPost("Provider/AddCardProvider")]
+    public IActionResult AddCardsProvider([FromBody] List<YgoProDeckCardDto> cardList)
+    {
+        List<Card> cards = new List<Card>();
+
+        foreach (var card in cardList)
+        { 
+            var c = CardFactory.CreateCardFromYgoProDeckDto(card);
+            cards.Add(c);
+        }
+        _context.Cards.AddRange(cards);
         _context.SaveChanges();
         return NoContent();
     }

@@ -6,11 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 using YGOApi.Data;
+using YGOApi.Integrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("CardConnection");
 
+builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 
 builder.Services.AddDbContext<CardContext>(opts =>
     opts.UseMySql(connectionString,
