@@ -480,3 +480,46 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+deck-builder-interface/node_modules
+deck-builder-interface/.pnp
+deck-builder-interface/.pnp.*
+deck-builder-interface/.yarn/*
+deck-builder-interface/.yarn/patches
+deck-builder-interface/.yarn/plugins
+deck-builder-interface/.yarn/releases
+deck-builder-interface/.yarn/versions
+
+# testing
+deck-builder-interface/coverage
+
+# next.js
+deck-builder-interface/.next/
+deck-builder-interface/out/
+
+# production
+deck-builder-interface/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+

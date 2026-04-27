@@ -2,7 +2,7 @@ services:
   ygoapi:
     build:
       context: .
-      dockerfile: YGOApi/Dockerfile
+      dockerfile: api/YGOApi/Dockerfile
     ports:
       - "8080:80"
     depends_on:
@@ -11,6 +11,17 @@ services:
       - ConnectionStrings__CardConnection=Server=db;Port=3306;Database=cards_db;User=root;Password=rootpass;
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+    networks:
+      - ygonet
+
+  deck-builder-interface:
+    build:
+      context: ./deck-builder-interface
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - ygoapi
     networks:
       - ygonet
 
