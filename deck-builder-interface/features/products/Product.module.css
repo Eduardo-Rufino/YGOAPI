@@ -1,0 +1,61 @@
+.container {
+  max-width: 600px;
+  margin: 6rem auto;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  text-align: center;
+}
+
+:global(.dark) .container {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+:global(.dark) .title {
+  color: #f9fafb;
+}
+
+.price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #6366f1;
+  margin-bottom: 1.5rem;
+}
+
+.description {
+  font-size: 1.125rem;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+}
+
+:global(.dark) .description {
+  color: #9ca3af;
+}
+
+.backLink {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: opacity 0.2s;
+}
+
+.backLink:hover {
+  opacity: 0.8;
+}
+
+.notFound {
+  text-align: center;
+  margin-top: 10rem;
+}

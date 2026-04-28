@@ -1,0 +1,36 @@
+.container {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+:global(.dark) .title {
+  color: #f9fafb;
+}
+
+.content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #374151;
+}
+
+:global(.dark) .content {
+  color: #d1d5db;
+}
+
+.content p {
+  margin-bottom: 1.5rem;
+}
+
+.highlight {
+  color: #6366f1;
+  font-weight: 600;
+}

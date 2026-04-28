@@ -41,5 +41,7 @@ namespace YGOApi.Data.Dtos
         public string? LinkMarkers { get; set; }
 
         public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
+
+        public string? ImageUrl { get; set; }
     }
 }

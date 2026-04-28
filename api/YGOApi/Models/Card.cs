@@ -44,5 +44,7 @@ public class Card
 
     public string? LinkMarkers { get; set; }
 
+    public string ImageUrl { get; set; }
+
     public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 }
