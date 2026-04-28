@@ -36,15 +36,15 @@ export const deckService = {
     await new Promise(r => setTimeout(r, 400));
     return MOCK_DECKS;
   },
-  
+
   getDeckById: async (id: string): Promise<Deck | null> => {
     await new Promise(r => setTimeout(r, 400));
     return MOCK_DECKS.find(d => d.id === id) || null;
   },
 
-  getAvailableCards: async (): Promise<Card[]> => {
+  getAvailableCards: async (skip: number = 0, take: number = 10000): Promise<Card[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=100`);
+      const response = await fetch(`${API_BASE_URL}/Card?skip=${skip}&take=${take}`);
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }

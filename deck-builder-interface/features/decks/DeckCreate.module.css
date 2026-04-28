@@ -11,10 +11,17 @@
 
 /* Header Sections */
 .topBar {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: flex-start;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  align-items: stretch; /* Align vertical sizes */
+  width: 100%;
+}
+
+/* Spacer to align with detailsSection */
+.topBarSpacer {
+  width: 320px;
+  flex-shrink: 0;
 }
 
 .controlsBox, .filtersBox {
@@ -31,9 +38,17 @@
 }
 
 .controlsBox {
+  width: 780px; /* Match updated deckSection width */
+  background: white;
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  flex-direction: row; /* Horizontal layout to better use space */
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-shrink: 0;
 }
 
 .actionButtons {
@@ -80,10 +95,11 @@
 }
 
 .deckNameInput {
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  font-size: 1rem;
+  font-size: 0.9rem;
+  width: 250px;
 }
 
 .totalCounter {
@@ -94,9 +110,17 @@
 
 /* Filters Box */
 .filtersBox {
+  width: 375px; /* Match databaseSection width */
+  background: white;
+  padding: 1.25rem; /* Slightly reduced padding */
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .filterRow {
@@ -106,65 +130,184 @@
 }
 
 .searchInput, .selectInput {
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   flex: 1;
+  min-width: 0; /* Allow shrinking */
 }
 
 .checkboxGroup {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.4rem;
+  font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
 }
 
 .btnMoreFilters {
-  padding: 0.75rem 1.25rem;
+  padding: 0.6rem 1rem;
   background: #f3f4f6;
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 10px;
   font-weight: 600;
+  font-size: 0.8rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Main Content Grid */
 .mainLayout {
   display: flex;
-  justify-content: center; /* Center horizontally */
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 1rem;
   min-height: 800px;
   width: 100%;
 }
 
-.deckSection {
-  width: 1080px; /* Calculated for 10 cards per row without info border */
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
+/* Card Details Section */
+.detailsSection {
+  width: 320px;
+  background: white;
   border-radius: 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   flex-shrink: 0;
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
 }
 
-.databaseSection {
-  width: 460px;
+:global(.dark) .detailsSection {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.detailsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.detailsTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-align: center;
+  color: #111827;
+}
+
+:global(.dark) .detailsTitle {
+  color: #f3f4f6;
+}
+
+.detailsImage {
+  width: 240px;
+  height: 350px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.detailsStats {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #6366f1;
+}
+
+.detailsEffect {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #4b5563;
+  text-align: justify;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+:global(.dark) .detailsEffect {
+  color: #9ca3af;
+}
+
+.detailsEmpty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+.deckSection {
+  width: 780px; /* Reduced from 820px */
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(8px);
   border-radius: 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 1.5rem 0.5rem 1.5rem 1.25rem; /* Reduced right padding */
+  padding: 1rem; /* Reduced from 1.5rem */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-shrink: 0;
+  height: 82vh; /* Use viewport height to fit everything in one screen */
+  min-height: 700px;
+}
+
+.mainDeckContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mainDeckContainer section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.extraDeckContainer {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.extraDeckContainer section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+:global(.dark) .extraDeckContainer {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.databaseSection {
+  width: 375px; /* Increased from 350px to fit 4 cards + scrollbar */
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   flex-shrink: 0;
-  overflow: hidden; /* Prevent section itself from scrolling */
+  overflow: hidden;
 }
 
 :global(.dark) .deckSection, :global(.dark) .databaseSection {
@@ -195,19 +338,56 @@
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 0.5rem;
-  overflow-y: auto;
-  max-height: 500px;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 1px; /* Minimal gap to maximize card size */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.extraDeckGrid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 2px;
+  width: 100%;
+  height: 105px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.extraDeckGrid .cardItem, .cardGrid .cardItem {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.extraDeckGrid .cardItem {
+  flex: 1;
+  max-width: 70px; /* Prevents becoming giant when few cards exist */
+}
+
+.extraDeckGrid .cardImage, .cardGrid .cardImage {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  aspect-ratio: 70/102;
+  object-fit: contain;
 }
 
 .databaseGrid {
   display: grid;
-  grid-template-columns: repeat(4, 100px); /* Strict card width */
-  gap: 2px; /* Minimal gap to stay within 460px */
+  grid-template-columns: repeat(4, 75px); /* Reduced card width */
+  gap: 0.5rem;
   overflow-y: auto;
-  overflow-x: hidden; /* Force hide horizontal scroll */
+  overflow-x: hidden;
   max-height: 700px;
-  padding-right: 20px; /* Large gap to the vertical scrollbar */
+  padding-right: 0.5rem;
 }
 
 /* Individual Card Visuals */
@@ -221,26 +401,26 @@
 .cardItemDeck {
   background: transparent;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: none;
 }
 
 .cardItemDatabase {
-  width: 100px;
-  height: 175px;
+  width: 75px;
+  height: 135px;
   background: white;
-  padding: 0.5rem;
+  padding: 0.3rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.3rem;
   align-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   box-sizing: border-box;
 }
 
 .cardItemDatabase .cardImage {
-  width: 82px; /* Adjusted to fit 100px box with padding */
-  height: 120px;
+  width: 65px;
+  height: 95px;
 }
 
 :global(.dark) .cardItemDatabase {
@@ -254,10 +434,19 @@
 }
 
 .cardImage {
-  width: 94px;
-  height: 137px;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 70/102;
+  object-fit: contain;
   display: block;
+}
+
+.cardItemDatabase .cardImage {
+  width: 65px;
+  height: 95px;
+  object-fit: cover;
 }
 
 .cardInfoBox {

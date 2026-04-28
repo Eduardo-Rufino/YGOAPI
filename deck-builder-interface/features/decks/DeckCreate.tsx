@@ -11,17 +11,21 @@ import styles from './DeckCreate.module.css';
  * (Adjust according to actual YGOAPI type mapping if known)
  */
 const isExtraDeckCard = (card: Card) => {
-  // Common Extra Deck type names/IDs in YGO context
-  const extraTypes = [
-    'Fusion Monster', 'Synchro Monster', 'Xyz Monster', 'Link Monster',
-    'Synchro Tuner Monster', 'Fusion Pendulum Monster', 'Xyz Pendulum Monster'
-  ];
-  // Since our API currently uses numeric types, we'll need a way to detect them.
-  // For now, let's assume we can check via type string if available or a specific numeric range.
-  // IF the API provides a string type, we'd use that. 
-  // Given the previous mapping task, the user mentioned type is 0. 
-  // I'll implement a flexible check that can be refined.
-  return card.type >= 10 && card.type <= 15; // Placeholder logic
+  // Logic: if Type is 0 and subType is 2, 4, 5 or 6, it belongs to the Extra Deck
+  const extraSubTypes = [2, 4, 5, 6];
+  return card.type === 0 && extraSubTypes.includes(card.subType);
+};
+
+/**
+ * Utility to sort cards by Type (priority) and then Name.
+ */
+const sortCards = (cards: Card[]) => {
+  return [...cards].sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type - b.type;
+    }
+    return a.name.localeCompare(b.name);
+  });
 };
 
 export const DeckCreate: React.FC = () => {
@@ -41,6 +45,7 @@ export const DeckCreate: React.FC = () => {
   const [searchName, setSearchName] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [personalOnly, setPersonalOnly] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -65,13 +70,20 @@ export const DeckCreate: React.FC = () => {
   }, [availableCards, searchName, selectedCollection]);
 
   const addCardToDeck = (card: Card) => {
+    // Check for 3 copy limit by name (standard YGO rule)
+    const currentCopies = [...mainDeck, ...extraDeck].filter(c => c.name === card.name).length;
+    if (currentCopies >= 3) {
+      alert(`Limite atingido: Você já possui 3 cópias de "${card.name}" no deck.`);
+      return;
+    }
+
     if (isExtraDeckCard(card)) {
       if (extraDeck.length < 15) {
-        setExtraDeck([...extraDeck, card]);
+        setExtraDeck(sortCards([...extraDeck, card]));
       }
     } else {
       if (mainDeck.length < 60) {
-        setMainDeck([...mainDeck, card]);
+        setMainDeck(sortCards([...mainDeck, card]));
       }
     }
   };
@@ -79,13 +91,14 @@ export const DeckCreate: React.FC = () => {
   const removeFromMain = (index: number) => {
     const newDeck = [...mainDeck];
     newDeck.splice(index, 1);
-    setMainDeck(newDeck);
+    // Already sorted, removing one doesn't break sort order but we keep it consistent
+    setMainDeck(sortCards(newDeck));
   };
 
   const removeFromExtra = (index: number) => {
     const newDeck = [...extraDeck];
     newDeck.splice(index, 1);
-    setExtraDeck(newDeck);
+    setExtraDeck(sortCards(newDeck));
   };
 
   const totalCards = mainDeck.length + extraDeck.length;
@@ -112,6 +125,9 @@ export const DeckCreate: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.topBar}>
+        {/* Spacer for alignment with details section */}
+        <div className={styles.topBarSpacer}></div>
+
         {/* Top Left: Controls */}
         <div className={styles.controlsBox}>
           <div className={styles.actionButtons}>
@@ -171,39 +187,77 @@ export const DeckCreate: React.FC = () => {
       </div>
 
       <div className={styles.mainLayout}>
-        {/* Bottom Left: Deck Sections */}
-        <div className={styles.deckSection}>
-          <section>
-            <h3 className={styles.subSectionTitle}>
-              Main Deck
-              <span className={`${styles.counterBadge} ${mainDeck.length < 40 ? styles.counterBadgeWarning : ''}`}>
-                {mainDeck.length} / 60 (Min 40)
-              </span>
-            </h3>
-            <div className={styles.cardGrid}>
-              {mainDeck.map((card, idx) => (
-                <div key={`main-${idx}`} className={`${styles.cardItem} ${styles.cardItemDeck}`} onClick={() => removeFromMain(idx)}>
-                  <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
-                </div>
-              ))}
+        {/* Left: Card Details Panel */}
+        <div className={styles.detailsSection}>
+          {hoveredCard ? (
+            <div className={styles.detailsContent}>
+              <div className={styles.detailsTitle}>{hoveredCard.name}</div>
+              <img 
+                src={hoveredCard.imageUrl} 
+                alt={hoveredCard.name} 
+                className={styles.detailsImage} 
+              />
+              <div className={styles.detailsStats}>
+                {hoveredCard.attack} / {hoveredCard.defense}
+              </div>
+              <div className={styles.detailsEffect}>
+                {hoveredCard.effect || 'Sem efeito.'}
+              </div>
             </div>
-          </section>
+          ) : (
+            <div className={styles.detailsEmpty}>
+              Passe o mouse sobre uma carta para ver os detalhes
+            </div>
+          )}
+        </div>
 
-          <section>
-            <h3 className={styles.subSectionTitle}>
-              Extra Deck
-              <span className={styles.counterBadge}>
-                {extraDeck.length} / 15
-              </span>
-            </h3>
-            <div className={styles.cardGrid}>
-              {extraDeck.map((card, idx) => (
-                <div key={`extra-${idx}`} className={`${styles.cardItem} ${styles.cardItemDeck}`} onClick={() => removeFromExtra(idx)}>
-                  <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* Bottom Center: Deck Sections */}
+        <div className={styles.deckSection}>
+          <div className={styles.mainDeckContainer}>
+            <section>
+              <h3 className={styles.subSectionTitle}>
+                Main Deck
+                <span className={`${styles.counterBadge} ${mainDeck.length < 40 ? styles.counterBadgeWarning : ''}`}>
+                  {mainDeck.length} / 60 (Min 40)
+                </span>
+              </h3>
+              <div className={styles.cardGrid}>
+                {mainDeck.map((card, idx) => (
+                  <div 
+                    key={`main-${idx}`} 
+                    className={`${styles.cardItem} ${styles.cardItemDeck}`} 
+                    onClick={() => removeFromMain(idx)}
+                    onMouseEnter={() => setHoveredCard(card)}
+                  >
+                    <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className={styles.extraDeckContainer}>
+            <section>
+              <h3 className={styles.subSectionTitle}>
+                Extra Deck
+                <span className={styles.counterBadge}>
+                  {extraDeck.length} / 15
+                </span>
+              </h3>
+              <div className={styles.extraDeckGrid}>
+                {extraDeck.map((card, idx) => (
+                  <div 
+                    key={`extra-${idx}`} 
+                    className={`${styles.cardItem} ${styles.cardItemDeck}`} 
+                    onClick={() => removeFromExtra(idx)}
+                    onMouseEnter={() => setHoveredCard(card)}
+                  >
+                    <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
 
         {/* Bottom Right: Card Database */}
@@ -211,7 +265,12 @@ export const DeckCreate: React.FC = () => {
           <h3 className={styles.subSectionTitle}>Banco de Dados</h3>
           <div className={styles.databaseGrid}>
             {filteredCards.map((card, idx) => (
-              <div key={`db-${idx}`} className={`${styles.cardItem} ${styles.cardItemDatabase}`} onClick={() => addCardToDeck(card)}>
+              <div 
+                key={`db-${idx}`} 
+                className={`${styles.cardItem} ${styles.cardItemDatabase}`} 
+                onClick={() => addCardToDeck(card)}
+                onMouseEnter={() => setHoveredCard(card)}
+              >
                 <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
                 <div className={styles.cardInfoBox}>
                   <span className={styles.cardName}>{card.name}</span>
