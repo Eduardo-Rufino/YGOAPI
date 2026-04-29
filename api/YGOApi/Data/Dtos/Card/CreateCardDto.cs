@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
-namespace YGOApi.Data.Dtos
+namespace YGOApi.Data.Dtos.Card
 {
-    public class ReadCardDto
+    public class CreateCardDto
     {
         [Required(ErrorMessage = "O Nome é obrigatório")]
         [StringLength(60, ErrorMessage = "O tamanho máximo Nome não pode exceder 60 caracteres")]
@@ -43,7 +43,5 @@ namespace YGOApi.Data.Dtos
         public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 
         public string? ImageUrl { get; set; }
-
-        public DateTime HoraDaConsulta { get; set; } = DateTime.Now;
     }
 }

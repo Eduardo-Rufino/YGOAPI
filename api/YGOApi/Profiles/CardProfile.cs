@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using YGOApi.Data.Dtos;
+using YGOApi.Data.Dtos.Card;
+using YGOApi.Data.Dtos.Deck;
 using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Models;
 
