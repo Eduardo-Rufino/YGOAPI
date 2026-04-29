@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using YGOApi.Data;
-using YGOApi.Data.Dtos;
+using YGOApi.Data.Dtos.Card;
+using YGOApi.Data.Dtos.Deck;
 using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Integrations;
 using YGOApi.Models;
@@ -65,26 +66,6 @@ public class CardController : ControllerBase
             card => card.Id == id);
         if(card == null) return NotFound();
         _mapper.Map(cardDto, card);
-        _context.SaveChanges();
-        return NoContent();
-    }
-
-    [HttpPatch("{id}")]
-    public IActionResult UpdateCardPatch(int id, JsonPatchDocument<UpdateCardDto> patch)
-    {
-        var card = _context.Cards.FirstOrDefault(
-            card => card.Id == id);
-        if (card == null) return NotFound();
-
-        var cardParaAtualizar = _mapper.Map<UpdateCardDto>(card);
-
-        patch.ApplyTo(cardParaAtualizar, ModelState);
-
-        if(!TryValidateModel(cardParaAtualizar))
-        {
-            return ValidationProblem(ModelState);
-        }
-        _mapper.Map(cardParaAtualizar, card);
         _context.SaveChanges();
         return NoContent();
     }

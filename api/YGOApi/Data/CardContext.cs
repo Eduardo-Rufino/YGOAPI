@@ -12,5 +12,7 @@ namespace YGOApi.Data
         }
 
         public DbSet<Card> Cards { get; set; }
-    }
+        public DbSet<Decks> Decks { get; set; }
+        public DbSet<DeckCard> DeckCards { get; set; }
+        }
 }
