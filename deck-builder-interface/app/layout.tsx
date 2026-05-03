@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus | Minimal Navigation",
+  title: "Yu-Gi-Oh! Da Galera 2.0",
   description: "A premium navigation system for small projects.",
 };
 

@@ -14,80 +14,329 @@
 .title {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #111827;
-}
-
-:global(.dark) .title {
-  color: #f9fafb;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-}
-
-.deckCard {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 200px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-:global(.dark) .deckCard {
-  background: #111827;
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-.deckCard:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  border-color: #6366f1;
-}
-
-.deckName {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 0.5rem;
-}
-
-:global(.dark) .deckName {
-  color: #f9fafb;
-}
-
-.deckInfo {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.cardCount {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  border-radius: 9999px;
-  font-weight: 600;
-  margin-top: 1rem;
+  color: #F1F5F9; /* Gelo */
 }
 
 .createBtn {
   padding: 0.75rem 1.5rem;
-  background: #6366f1;
-  color: white;
+  background: #8A2BE2; /* Primary */
+  color: #F1F5F9;
   border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
-  transition: opacity 0.2s;
+  transition: all 0.3s ease;
 }
 
 .createBtn:hover {
-  opacity: 0.9;
+  background: #ADEBB3; /* Mint Green as hover */
+  color: #1E293B;
+  transform: translateY(-2px);
 }
+
+/* Toasts */
+.toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  color: #F1F5F9;
+  font-weight: 700;
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.success { background: #10B981; border-left: 5px solid #059669; }
+.error { background: #EF4444; border-left: 5px solid #DC2626; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Skeletons */
+.skeletonCard {
+  width: 100%;
+  aspect-ratio: 70/102;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.1; }
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+.deckCardWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Card Container */
+.deckCard {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+
+.deckCard:hover {
+  transform: translateY(-8px);
+}
+
+/* Deck Cover Image */
+.coverContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 70/102; /* Yugioh card ratio */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  background: #24324D; /* Deep Blue background */
+}
+
+.actionsOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.deckCard:hover .actionsOverlay {
+  opacity: 1;
+}
+
+.actionBtn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  background: #F1F5F9;
+  color: #1E293B;
+  font-size: 1.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.actionBtn:hover {
+  background: #8A2BE2;
+  color: #F1F5F9;
+  transform: scale(1.15);
+}
+
+.editBtn:hover {
+  background: #8A2BE2;
+}
+
+.deleteBtn:hover {
+  background: #EF4444;
+}
+
+.deckCard:hover .coverContainer {
+  border-color: #8A2BE2; /* Primary highlight */
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+}
+
+.coverImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Badge overlay on top of cover */
+.deckOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(30, 41, 59, 0.9) 0%, transparent 100%);
+  padding: 1.5rem 0.25rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.cardCountBadge {
+  background: #ADEBB3; /* Mint Green */
+  color: #1E293B;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(4px);
+}
+
+/* Info Box below card */
+/* Custom Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background: #24324D; /* Deep Blue */
+  border: 1px solid #8A2BE2;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  animation: modalScale 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.28);
+}
+
+@keyframes modalScale {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modalIcon {
+  font-size: 2.5rem;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  color: #F1F5F9;
+  margin: 0;
+}
+
+.modalText {
+  color: #94A3B8;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btnCancel {
+  flex: 1;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F1F5F9;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btnConfirmDelete {
+  flex: 1;
+  padding: 0.75rem;
+  background: #EF4444;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.btnConfirmDelete:hover {
+  background: #DC2626;
+  transform: translateY(-2px);
+}
+
+.deckInfoBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.deckName {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #F1F5F9; /* Gelo */
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.deckFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deckDate {
+  font-size: 0.75rem;
+  color: #94A3B8; /* Muted Gelo */
+  margin: 0;
+}
+
+.editLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8A2BE2;
+  opacity: 0;
+  transition: all 0.3s ease;
+  transform: translateX(-10px);
+}
+
+.deckCard:hover .editLabel {
+  opacity: 1;
+  transform: translateX(0);
+}
+

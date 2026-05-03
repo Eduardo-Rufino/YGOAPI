@@ -15,7 +15,7 @@ export const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       <Link href="/" className={styles.logo}>
-        Nexus
+        Yu-Gi-Oh! Da Galera 2.0
       </Link>
       
       <ul className={styles.navLinks}>
@@ -49,6 +49,22 @@ export const Navbar: React.FC = () => {
             className={`${styles.navLink} ${isActive('/about') ? styles.active : ''}`}
           >
             About
+          </Link>
+        </li>
+        <li>
+          <Link 
+            href="/login" 
+            className={`${styles.navLink} ${isActive('/login') ? styles.active : ''}`}
+          >
+            Login
+          </Link>
+        </li>
+        <li>
+          <Link 
+            href="/register" 
+            className={`${styles.navLink} ${isActive('/register') ? styles.active : ''}`}
+          >
+            Register
           </Link>
         </li>
       </ul>
