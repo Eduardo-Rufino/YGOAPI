@@ -55,14 +55,15 @@ public class PlayerCollectionController : ControllerBase
     /// </remarks>
     [HttpPost("Add/{playerId}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult AddCards(int playerId, [FromQuery]List<UpdatePlayerCollectionDto> newCards)
+    public IActionResult AddCards(int playerId, [FromBody]List<UpdatePlayerCollectionDto> newCards)
     {
         var cardsToUpdate = _context.PlayerCollections
             .Where(pc => pc.PlayerId == playerId && newCards.Select(c => c.CardId).Contains(pc.CardId))
             .ToList();
 
         var cardsToAdd = newCards.Except(cardsToUpdate.Select(c => new UpdatePlayerCollectionDto { CardId = c.CardId })).ToList();
-
+        Console.WriteLine($"New Cards: {newCards.Count}");
+        Console.WriteLine($"Cards to update: {cardsToUpdate.Count}, Cards to add: {cardsToAdd.Count}");
         int added = 0, updated = 0;
 
         if (cardsToUpdate.Count > 0) 

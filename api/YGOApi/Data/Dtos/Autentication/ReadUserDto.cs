@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
-namespace YGOApi.Data.Dtos.User
+namespace YGOApi.Data.Dtos.Autentication
 {
     public class ReadUserDto
     {

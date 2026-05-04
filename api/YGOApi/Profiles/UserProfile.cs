@@ -1,8 +1,5 @@
 ﻿using AutoMapper;
-using YGOApi.Data.Dtos.Card;
-using YGOApi.Data.Dtos.Deck;
-using YGOApi.Data.Dtos.User;
-using YGOApi.Data.Dtos.YgoProDeck;
+using YGOApi.Data.Dtos.Autentication;
 using YGOApi.Models;
 
 namespace YGOApi.Profiles
@@ -11,7 +8,7 @@ namespace YGOApi.Profiles
     {
         public UserProfile()
         {
-            CreateMap<CreateUserDto, User>();
+            CreateMap<RegisterUserDto, User>();
             CreateMap<UpdateUserDto, User>();
             CreateMap<User, UpdateUserDto>();
             CreateMap<User, ReadUserDto>();            

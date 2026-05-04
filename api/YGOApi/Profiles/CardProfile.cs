@@ -13,7 +13,8 @@ namespace YGOApi.Profiles
             CreateMap<CreateCardDto, Card>();
             CreateMap<UpdateCardDto, Card>();
             CreateMap<Card, UpdateCardDto>();
-            CreateMap<Card, ReadCardDto>();            
+            CreateMap<Card, ReadCardDto>();
+            CreateMap<Card, ReadCardResponseDto>();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Integrations;
@@ -58,6 +59,7 @@ public class ProviderController(CardContext context, ICardProvider provider) : C
     /// - Não há validação explícita de duplicatas ou integridade aqui; considerar adições futuras para deduplicação e validação.
     /// </remarks>
     [HttpPost("AddCardProvider")]
+    [Authorize(Policy = "Admin")]
     public IActionResult AddCardsProvider([FromBody] List<YgoProDeckCardDto> cardList)
     {
         List<Card> cards = new List<Card>();

@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
+using YGOApi.Data.Dtos.Autentication;
 using YGOApi.Data.Dtos.Deck;
-using YGOApi.Data.Dtos.User;
 using YGOApi.Integrations;
 using YGOApi.Models;
 
@@ -32,21 +32,6 @@ public class UserController : ControllerBase
     {
         _context = context;
         _mapper = mapper;
-    }
-
-    /// <summary>
-    /// Adiciona um novo usuário ao sistema.
-    /// </summary>
-    /// <param name="userDto">DTO contendo os dados necessários para criar o usuário (<see cref="CreateUserDto"/>).</param>
-    /// <returns>Retorna 201 Created com o usuário criado no corpo da resposta.</returns>
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult AddUser([FromBody] CreateUserDto userDto)
-    {
-        User user = _mapper.Map<User>(userDto);
-        _context.User.Add(user);
-        _context.SaveChanges();
-        return Created(string.Empty, user);
     }
 
     /// <summary>

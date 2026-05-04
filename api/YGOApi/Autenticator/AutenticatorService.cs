@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -7,23 +8,27 @@ using YGOApi.Models;
 
 namespace YGOApi.Autenticator
 {
-    public static class AutenticatorService
+    public class AutenticatorService(IConfiguration configuration, IPasswordHasher<User> passwordHasher) : IAutenticatorService
     {
-        public static string GerarToken(User user)
+        public void GenerateHashPassword(ref User user)
+        {            
+            user.Password = passwordHasher.HashPassword(user, user.Password);            
+        }
+
+        public string GerarToken(User user)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            var name = user.Name ?? string.Empty;
+            var userName = user.UserName ?? string.Empty;
             var roleName = Enum.GetName<UserRole>(user.Role) ?? user.Role.ToString();
 
-            var key = Encoding.ASCII.GetBytes("GXnY9r6HYhCBTCm0VmOajxhBUX1MNhowtdJvEu+9PWE=");
-
+            var key = Encoding.ASCII.GetBytes(configuration.GetSection("Jwt:Key").Value);
             
             var tokenConfig = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, name),
+                    new Claim(ClaimTypes.Name, userName),
                     new Claim(ClaimTypes.Role, roleName)
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
@@ -36,6 +41,14 @@ namespace YGOApi.Autenticator
             var token = tokenHandler.CreateToken(tokenConfig);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public bool Login(User usuarioNoBanco, string senhaDigitada)
+        {
+            // Verifica se a senha digitada "bate" com o hash do banco
+            var result = passwordHasher.VerifyHashedPassword(usuarioNoBanco, usuarioNoBanco.Password, senhaDigitada);
+
+            return result == PasswordVerificationResult.Success;
         }
     }
 }

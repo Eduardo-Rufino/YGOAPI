@@ -1,6 +1,8 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Deck;
 using YGOApi.Integrations;
@@ -102,9 +104,13 @@ public class DeckController : ControllerBase
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão: 50.</param>
     /// <returns>Lista de <see cref="ReadDeckDto"/> representando decks paginados.</returns>
     [HttpGet]
+    [Authorize(Policy = "Player")]
     public IEnumerable<ReadDeckDto> GetDeck([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        return _mapper.Map<List<ReadDeckDto>>(_context.Decks.Include(x => x.DeckCards).Skip(skip).Take(take));
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+        var user = _context.User.Where(x => x.UserName == userName).FirstOrDefault()
+            ?? throw new UnauthorizedAccessException("User not found");        
+        return _mapper.Map<List<ReadDeckDto>>(_context.Decks.Include(x => x.DeckCards).Where(x => x.UserId == user.Id).Skip(skip).Take(take));
     }
 
     /// <summary>

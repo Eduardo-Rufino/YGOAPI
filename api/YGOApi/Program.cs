@@ -1,12 +1,14 @@
-using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Threading;
+using System.Text;
+using YGOApi.Autenticator;
 using YGOApi.Data;
 using YGOApi.Integrations;
+using YGOApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,11 +16,38 @@ var connectionString = builder.Configuration.GetConnectionString("CardConnection
 
 builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 
+builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
+
 builder.Services.AddDbContext<CardContext>(opts =>
     opts.UseMySql(connectionString,
         new MySqlServerVersion(new Version(8, 0, 31)),
         mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
 
+builder.Services.AddAuthentication(opts =>
+{
+    opts.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opts.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
+        ClockSkew = TimeSpan.Zero,
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Admin", policy => policy.RequireRole("ADMIN"))
+    .AddPolicy("Player", policy => policy.RequireRole("ADMIN", "PLAYER"));
+
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // Add services to the container.
@@ -37,6 +66,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "YGOApi", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT desta forma: SeuTokenAqui"
+    });
+
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
@@ -54,6 +93,7 @@ if (app.Environment.IsDevelopment())
 // Enable CORS using the configured policy
 app.UseCors("AllowLocal3000");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

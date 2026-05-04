@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Card;
 using YGOApi.Integrations;
@@ -18,7 +21,6 @@ public class CardController : ControllerBase
 
     private CardContext _context;
     private IMapper _mapper;
-    private ICardProvider _provider;
 
     /// <summary>
     /// Inicializa uma nova instância de <see cref="CardController"/>.
@@ -26,11 +28,10 @@ public class CardController : ControllerBase
     /// <param name="context">Contexto do banco de dados usado para persistência de cartas.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para conversão entre entidades e DTOs.</param>
     /// <param name="provider">Provedor externo de cartas (injetado para futuras integrações).</param>
-    public CardController(CardContext context, IMapper mapper, ICardProvider provider)
+    public CardController(CardContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
-        _provider = provider;
     }
 
     /// <summary>
@@ -55,9 +56,48 @@ public class CardController : ControllerBase
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    public IEnumerable<ReadCardDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    [Authorize(Policy = "Player")]
+    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        return _mapper.Map<List<ReadCardDto>>(_context.Cards.Skip(skip).Take(take));
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+        var user = _context.User.Where(x => x.UserName == userName).FirstOrDefault()
+            ?? throw new UnauthorizedAccessException("User not found");
+
+        var query = _context.Cards
+        .GroupJoin(
+        _context.PlayerCollections.Where(pc => pc.PlayerId == user.Id),
+            card => card.Id,
+            pc => pc.Id,
+            (card, pcGroup) => new { card, pcGroup })
+        .SelectMany(
+            x => x.pcGroup.DefaultIfEmpty(),
+            (x, pc) => new ReadCardResponseDto
+            {
+                Attack = x.card.Attack,
+                Attribute = x.card.Attribute,
+                Defense = x.card.Defense,
+                Archetype = x.card.Archetype,
+                Effect = x.card.Effect,
+                Collection = x.card.Collection,
+                BanStatus = x.card.BanStatus,
+                Id = x.card.Id,
+                ImageUrl = x.card.ImageUrl,
+                Level = x.card.Level,
+                LinkMarkers = x.card.LinkMarkers,
+                LinkRating = x.card.LinkRating,
+                Name = x.card.Name,
+                PendulumScale = x.card.PendulumScale,
+                Race = x.card.Race,
+                SubType = x.card.SubType,
+                Type = x.card.Type,
+                HoraDaConsulta = DateTime.Now,
+                HasCard = pc != null
+            }
+        ).Skip(skip).Take(take);
+
+        var resultado = query.ToList();
+
+        return resultado;
     }
 
     /// <summary>
