@@ -1,4 +1,4 @@
-import { DeckDetailPage } from "@/features/decks/DeckDetailPage";
+import { DeckCreate } from "@/features/decks/DeckCreate";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -6,5 +6,5 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { id } = await params;
-  return <DeckDetailPage id={id} />;
+  return <DeckCreate initialDeckId={id} />;
 }
