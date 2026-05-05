@@ -8,7 +8,8 @@ services:
     depends_on:
       - db
     environment:
-      - ConnectionStrings__CardConnection=Server=db;Port=3306;Database=cards_db;User=root;Password=rootpass;
+      # Alterado para o formato do PostgreSQL (Porta padrão 5432)
+      - ConnectionStrings__CardConnection=Host=db;Port=5432;Database=cards_db;Username=postgres;Password=rootpass;
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
     networks:
@@ -26,20 +27,24 @@ services:
       - ygonet
 
   db:
-    image: mysql:8.0
+    # Alterado de mysql:8.0 para postgres (recomendo a versão 15 ou 16)
+    image: postgres:16-alpine
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: cards_db
+      # Variáveis específicas do PostgreSQL
+      POSTGRES_PASSWORD: rootpass
+      POSTGRES_DB: cards_db
+      POSTGRES_USER: postgres
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data # O caminho interno do Postgres é diferente do MySQL
     networks:
       - ygonet
 
 volumes:
   db_data:
+    # O Docker criará um novo volume limpo para o Postgres
 
 networks:
   ygonet:

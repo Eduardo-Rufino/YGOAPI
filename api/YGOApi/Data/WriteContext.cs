@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using YGOApi.Data.Enums;
 using YGOApi.Models;
 
 namespace YGOApi.Data
@@ -9,6 +10,19 @@ namespace YGOApi.Data
             :base(opts)
         {
                 
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Registra os Enums nativos no Postgres
+            modelBuilder.HasPostgresEnum<CardAtribute>();
+            modelBuilder.HasPostgresEnum<CardBanStatus>();
+            modelBuilder.HasPostgresEnum<CardRace>();
+            modelBuilder.HasPostgresEnum<CardSubType>();
+            modelBuilder.HasPostgresEnum<CardType>();
+            modelBuilder.HasPostgresEnum<UserRole>();
+
+            base.OnModelCreating(modelBuilder);
         }
 
         public DbSet<Card> Cards { get; set; }

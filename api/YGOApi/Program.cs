@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Npgsql;
 using System.Reflection;
 using System.Text;
 using YGOApi.Autenticator;
 using YGOApi.Data;
+using YGOApi.Data.Enums;
 using YGOApi.Integrations;
 using YGOApi.Models;
 
@@ -19,9 +21,20 @@ builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
 
 builder.Services.AddDbContext<WriteContext>(opts =>
-    opts.UseMySql(connectionString,
-        new MySqlServerVersion(new Version(8, 0, 31)),
-        mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
+    opts.UseNpgsql(connectionString,
+        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
+
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.MapEnum<CardAtribute>();
+dataSourceBuilder.MapEnum<CardBanStatus>();
+dataSourceBuilder.MapEnum<CardRace>();
+dataSourceBuilder.MapEnum<CardSubType>();
+dataSourceBuilder.MapEnum<CardType>();
+dataSourceBuilder.MapEnum<UserRole>();
+var dataSource = dataSourceBuilder.Build();
+
+builder.Services.AddDbContext<WriteContext>(opts =>
+    opts.UseNpgsql(dataSource));
 
 builder.Services.AddAuthentication(opts =>
 {
@@ -66,16 +79,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "YGOApi", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Insira o token JWT desta forma: SeuTokenAqui"
-    });
-
+    
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);

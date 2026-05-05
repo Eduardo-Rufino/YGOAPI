@@ -3,6 +3,5 @@
 public enum UserRole
 {
     ADMIN,
-    PLAYER
-    
+    PLAYER    
 }
