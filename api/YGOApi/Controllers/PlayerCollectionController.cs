@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
 using YGOApi.Data;
@@ -22,14 +23,14 @@ public class PlayerCollectionController : ControllerBase
     /// <summary>
     /// Contexto de acesso a dados para operações relacionadas a cartas e coleções.
     /// </summary>
-    private CardContext _context;
+    private WriteContext _context;
     private IMapper _mapper;
 
     /// <summary>
     /// Inicializa uma nova instância de `PlayerCollectionController`.
     /// </summary>
     /// <param name="context">Instância de `CardContext` para acesso ao banco de dados.</param>
-    public PlayerCollectionController(CardContext context, IMapper mapper)
+    public PlayerCollectionController(WriteContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
@@ -54,6 +55,7 @@ public class PlayerCollectionController : ControllerBase
     /// - As alterações são persistidas chamando `_context.SaveChanges()`.
     /// </remarks>
     [HttpPost("Add/{playerId}")]
+    [Authorize(Policy = "Player")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult AddCards(int playerId, [FromBody]List<UpdatePlayerCollectionDto> newCards)
     {
@@ -61,9 +63,8 @@ public class PlayerCollectionController : ControllerBase
             .Where(pc => pc.PlayerId == playerId && newCards.Select(c => c.CardId).Contains(pc.CardId))
             .ToList();
 
-        var cardsToAdd = newCards.Except(cardsToUpdate.Select(c => new UpdatePlayerCollectionDto { CardId = c.CardId })).ToList();
-        Console.WriteLine($"New Cards: {newCards.Count}");
-        Console.WriteLine($"Cards to update: {cardsToUpdate.Count}, Cards to add: {cardsToAdd.Count}");
+        var cardsToAdd = newCards.Where(nc => !cardsToUpdate.Any(ctu => ctu.CardId == nc.CardId)).ToList();
+        
         int added = 0, updated = 0;
 
         if (cardsToUpdate.Count > 0) 
@@ -118,8 +119,9 @@ public class PlayerCollectionController : ControllerBase
     /// - As alterações são persistidas com `_context.SaveChanges()`.
     /// </remarks>
     [HttpPost("Remove/{playerId}")]
+    [Authorize(Policy = "Player")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult RemoveCards(int playerId, [FromQuery] List<UpdatePlayerCollectionDto> cardsToRemove)
+    public IActionResult RemoveCards(int playerId, [FromBody] List<UpdatePlayerCollectionDto> cardsToRemove)
     {
         var cardsToUpdate = _context.PlayerCollections
             .Where(pc => pc.PlayerId == playerId && cardsToRemove.Select(c => c.CardId).Contains(pc.CardId))

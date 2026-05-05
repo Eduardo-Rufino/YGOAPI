@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import { Login } from '@/features/auth/Login';
 
 export default function LoginPage() {
-  return <Login />;
+  return (
+    <Suspense>
+      <Login />
+    </Suspense>
+  );
 }

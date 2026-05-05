@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
 namespace YGOApi.Models;
@@ -45,6 +45,8 @@ public class Card
     public string? LinkMarkers { get; set; }
 
     public string ImageUrl { get; set; }
+
+    public int Passcode { get; set; }
 
     public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 }

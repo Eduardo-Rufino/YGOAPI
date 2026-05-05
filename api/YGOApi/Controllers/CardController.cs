@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +19,7 @@ namespace YGOApi.Controllers;
 public class CardController : ControllerBase
 {
 
-    private CardContext _context;
+    private WriteContext _context;
     private IMapper _mapper;
 
     /// <summary>
@@ -28,7 +28,7 @@ public class CardController : ControllerBase
     /// <param name="context">Contexto do banco de dados usado para persistência de cartas.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para conversão entre entidades e DTOs.</param>
     /// <param name="provider">Provedor externo de cartas (injetado para futuras integrações).</param>
-    public CardController(CardContext context, IMapper mapper)
+    public CardController(WriteContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
@@ -60,7 +60,7 @@ public class CardController : ControllerBase
     public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-        var user = _context.User.Where(x => x.UserName == userName).FirstOrDefault()
+        var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
             ?? throw new UnauthorizedAccessException("User not found");
 
         var query = _context.Cards
@@ -90,6 +90,7 @@ public class CardController : ControllerBase
                 Race = x.card.Race,
                 SubType = x.card.SubType,
                 Type = x.card.Type,
+                Passcode = x.card.Passcode,
                 HoraDaConsulta = DateTime.Now,
                 HasCard = pc != null
             }

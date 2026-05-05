@@ -23,7 +23,7 @@ public class DeckCard
 
     
     [ForeignKey(nameof(DeckId))]
-    public virtual Decks Deck { get; set; }
+    public virtual Deck Deck { get; set; }
         
     [ForeignKey(nameof(CardId))]
     public virtual Card Card { get; set; }

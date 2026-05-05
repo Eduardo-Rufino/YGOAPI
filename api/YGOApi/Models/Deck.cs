@@ -4,7 +4,7 @@ using YGOApi.Data.Enums;
 
 namespace YGOApi.Models;
 
-public class Decks
+public class Deck
 {
     [Key]
     [Required]

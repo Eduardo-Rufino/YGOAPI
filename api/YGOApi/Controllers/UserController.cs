@@ -19,16 +19,16 @@ namespace YGOApi.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    private CardContext _context;
+    private WriteContext _context;
     private IMapper _mapper;
 
     /// <summary>
     /// Inicializa uma nova instância de <see cref="UserController"/>.
     /// </summary>
-    /// <param name="context">Contexto do banco de dados (<see cref="CardContext"/>).</param>
+    /// <param name="context">Contexto do banco de dados (<see cref="WriteContext"/>).</param>
     /// <param name="mapper">Instância do AutoMapper para conversões entre DTOs e entidades.</param>
     /// <param name="provider">Provedor de cartas (injetado, não utilizado nesta implementação).</param>
-    public UserController(CardContext context, IMapper mapper, ICardProvider provider)
+    public UserController(WriteContext context, IMapper mapper, ICardProvider provider)
     {
         _context = context;
         _mapper = mapper;
@@ -80,7 +80,7 @@ public class UserController : ControllerBase
     [HttpGet]
     public IEnumerable<ReadUserDto> GetUser([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
-        return _mapper.Map<List<ReadUserDto>>(_context.User.Skip(skip).Take(take));
+        return _mapper.Map<List<ReadUserDto>>(_context.Users.Skip(skip).Take(take));
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public class UserController : ControllerBase
     [HttpPut("{id}")]
     public IActionResult UpdateUser(int id, [FromBody] UpdateUserDto userDto)
     {
-        var user = _context.User.FirstOrDefault(
+        var user = _context.Users.FirstOrDefault(
             user => user.Id == id);
         if(user == null) return NotFound();
         _mapper.Map(userDto, user);
@@ -139,7 +139,7 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     public IActionResult DeleteUser(int id)
     {
-        var user = _context.User.FirstOrDefault(
+        var user = _context.Users.FirstOrDefault(
             user => user.Id == id);
         if (user == null) return NotFound();
         _context.DeckCards.RemoveRange(_context.DeckCards.Where(x => x.DeckId == id));

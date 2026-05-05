@@ -18,7 +18,7 @@ builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 
 builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
 
-builder.Services.AddDbContext<CardContext>(opts =>
+builder.Services.AddDbContext<WriteContext>(opts =>
     opts.UseMySql(connectionString,
         new MySqlServerVersion(new Version(8, 0, 31)),
         mySqlOptions => mySqlOptions.EnableRetryOnFailure()));
@@ -102,7 +102,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
-    var db = services.GetRequiredService<CardContext>();
+    var db = services.GetRequiredService<WriteContext>();
     const int maxRetries = 10;
     for (int attempt = 1; attempt <= maxRetries; attempt++)
     {

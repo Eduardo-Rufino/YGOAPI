@@ -11,10 +11,10 @@ namespace YGOApi.Profiles
     {
         public DeckProfile()
         {
-            CreateMap<CreateDeckDto, Decks>();
-            CreateMap<UpdateDeckDto, Decks>();
-            CreateMap<Decks, UpdateDeckDto>();
-            CreateMap<Decks, ReadDeckDto>()
+            CreateMap<CreateDeckDto, Deck>();
+            CreateMap<UpdateDeckDto, Deck>();
+            CreateMap<Deck, UpdateDeckDto>();
+            CreateMap<Deck, ReadDeckDto>()
                 .ForMember(dest => dest.CardCount, opt => opt.MapFrom(src => src.DeckCards.Sum(c => c.Quantity)));            
         }
     }

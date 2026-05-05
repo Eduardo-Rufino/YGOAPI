@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { deckService, Deck } from './deckService';
+import { authService } from '@/features/auth/authService';
 import styles from './DeckList.module.css';
 
 export const DeckList: React.FC = () => {
@@ -26,6 +27,10 @@ export const DeckList: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
     fetchDecks();
   }, []);
 

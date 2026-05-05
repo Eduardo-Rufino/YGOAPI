@@ -13,10 +13,10 @@ namespace YGOApi.Controllers;
 public class AutenticatorController : ControllerBase
 {
     private readonly IAutenticatorService _autenticator;
-    private CardContext _context;
+    private WriteContext _context;
     private IMapper _mapper;
 
-    public AutenticatorController(IAutenticatorService autenticator, CardContext context, IMapper mapper)
+    public AutenticatorController(IAutenticatorService autenticator, WriteContext context, IMapper mapper)
     {
         _autenticator = autenticator;
         _context = context;
@@ -27,7 +27,7 @@ public class AutenticatorController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult LoginUser([FromBody] LoginUserDto userDto)
     {
-        var user = _context.User.FirstOrDefault(u => u.UserName == userDto.UserName);
+        var user = _context.Users.FirstOrDefault(u => u.UserName == userDto.UserName);
         if (user == null)
         {
             throw new ArgumentException("User does not exist.");
@@ -46,7 +46,7 @@ public class AutenticatorController : ControllerBase
     {
         User user = _mapper.Map<User>(userDto);
         if (user == null) return BadRequest();
-        if (_context.User.Any(u => u.UserName == user.UserName))
+        if (_context.Users.Any(u => u.UserName == user.UserName))
         {
             throw new ArgumentException("Username already exists.");
         }

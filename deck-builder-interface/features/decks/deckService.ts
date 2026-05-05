@@ -1,3 +1,5 @@
+import { authService } from '@/features/auth/authService';
+
 export interface Card {
   name: string;
   attribute: number;
@@ -16,6 +18,7 @@ export interface Card {
   banStatus: number;
   imageUrl: string;
   horaDaConsulta: string;
+  passcode: number;
   id?: string; // Optional ID if not provided by API
 }
 
@@ -35,7 +38,12 @@ const API_BASE_URL = isServer ? 'http://ygoapi' : 'http://localhost:8080';
 export const deckService = {
   getDecks: async (): Promise<Deck[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck`, { cache: 'no-store' });
+      const response = await fetch(`${API_BASE_URL}/Deck`, { 
+        cache: 'no-store',
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch decks');
       return await response.json();
     } catch (error) {
@@ -46,7 +54,12 @@ export const deckService = {
 
   getDeckById: async (id: string): Promise<Deck | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { cache: 'no-store' });
+      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { 
+        cache: 'no-store',
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
       if (!response.ok) return null;
       return await response.json();
     } catch (error) {
@@ -57,7 +70,12 @@ export const deckService = {
 
   getDeckCardsData: async (id: string): Promise<any[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { cache: 'no-store' });
+      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { 
+        cache: 'no-store',
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
       if (!response.ok) return [];
       return await response.json();
     } catch (error) {
@@ -68,7 +86,11 @@ export const deckService = {
 
   getAvailableCards: async (skip: number = 0, take: number = 10000): Promise<Card[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Card?skip=${skip}&take=${take}`);
+      const response = await fetch(`${API_BASE_URL}/Card?skip=${skip}&take=${take}`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
@@ -82,7 +104,11 @@ export const deckService = {
 
   getCollections: async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=500`);
+      const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=500`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
       if (!response.ok) return [];
       const data: Card[] = await response.json();
       const collections = Array.from(new Set(data.map(c => c.collection).filter(Boolean)));
@@ -97,6 +123,7 @@ export const deckService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify({ name, deckCover }),
     });
@@ -109,6 +136,7 @@ export const deckService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify({ name, deckCover }),
     });
@@ -118,6 +146,9 @@ export const deckService = {
   deleteDeck: async (deckId: string): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/Deck/${deckId}`, {
       method: 'DELETE',
+      headers: {
+        ...authService.getAuthHeaders(),
+      },
     });
     if (!response.ok) throw new Error(`Failed to delete deck: ${response.statusText}`);
   },
@@ -142,6 +173,7 @@ export const deckService = {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify(payload),
     });

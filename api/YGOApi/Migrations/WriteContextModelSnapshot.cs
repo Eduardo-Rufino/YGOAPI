@@ -9,8 +9,8 @@ using YGOApi.Data;
 
 namespace YGOApi.Migrations
 {
-    [DbContext(typeof(CardContext))]
-    partial class CardContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(WriteContext))]
+    partial class WriteContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -70,6 +70,9 @@ namespace YGOApi.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("varchar(60)");
 
+                    b.Property<int>("Passcode")
+                        .HasColumnType("int");
+
                     b.Property<int?>("PendulumScale")
                         .HasColumnType("int");
 
@@ -85,6 +88,32 @@ namespace YGOApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Cards");
+                });
+
+            modelBuilder.Entity("YGOApi.Models.Deck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DeckCover")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Decks");
                 });
 
             modelBuilder.Entity("YGOApi.Models.DeckCard", b =>
@@ -111,32 +140,6 @@ namespace YGOApi.Migrations
                     b.HasIndex("DeckId");
 
                     b.ToTable("DeckCards");
-                });
-
-            modelBuilder.Entity("YGOApi.Models.Decks", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DeckCover")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar(60)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Decks");
                 });
 
             modelBuilder.Entity("YGOApi.Models.PlayerCollection", b =>
@@ -191,7 +194,18 @@ namespace YGOApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("YGOApi.Models.Deck", b =>
+                {
+                    b.HasOne("YGOApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("YGOApi.Models.DeckCard", b =>
@@ -202,8 +216,8 @@ namespace YGOApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("YGOApi.Models.Decks", "Deck")
-                        .WithMany()
+                    b.HasOne("YGOApi.Models.Deck", "Deck")
+                        .WithMany("DeckCards")
                         .HasForeignKey("DeckId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -211,17 +225,6 @@ namespace YGOApi.Migrations
                     b.Navigation("Card");
 
                     b.Navigation("Deck");
-                });
-
-            modelBuilder.Entity("YGOApi.Models.Decks", b =>
-                {
-                    b.HasOne("YGOApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("YGOApi.Models.PlayerCollection", b =>
@@ -241,6 +244,11 @@ namespace YGOApi.Migrations
                     b.Navigation("Card");
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("YGOApi.Models.Deck", b =>
+                {
+                    b.Navigation("DeckCards");
                 });
 #pragma warning restore 612, 618
         }

@@ -22,7 +22,7 @@ public class DeckController : ControllerBase
     /// <summary>
     /// Contexto do banco de dados para acesso às entidades relacionadas a cards e decks.
     /// </summary>
-    private CardContext _context;
+    private WriteContext _context;
     /// <summary>
     /// Mapper utilizado para converter entre DTOs e entidades do domínio.
     /// </summary>
@@ -35,10 +35,10 @@ public class DeckController : ControllerBase
     /// <summary>
     /// Construtor do controlador que recebe dependências via injeção.
     /// </summary>
-    /// <param name="context">Instância de <see cref="CardContext"/> para acesso a dados.</param>
+    /// <param name="context">Instância de <see cref="WriteContext"/> para acesso a dados.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para mapeamentos entre DTOs e entidades.</param>
     /// <param name="provider">Instância de <see cref="ICardProvider"/> para operações relacionadas a cards (opcional).</param>
-    public DeckController(CardContext context, IMapper mapper, ICardProvider provider)
+    public DeckController(WriteContext context, IMapper mapper, ICardProvider provider)
     {
         _context = context;
         _mapper = mapper;
@@ -53,10 +53,16 @@ public class DeckController : ControllerBase
     /// Retorna <see cref="CreatedResult"/> (HTTP 201) quando o deck é criado com sucesso.
     /// </returns>
     [HttpPost]
+    [Authorize(Policy = "Player")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult AddDeck([FromBody] CreateDeckDto deckDto)
     {
-        Decks deck = _mapper.Map<Decks>(deckDto);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+            return Unauthorized();
+
+        Deck deck = _mapper.Map<Deck>(deckDto);
+        deck.UserId = userId;
         _context.Decks.Add(deck);
         _context.SaveChanges();
         return Created(string.Empty, deck);
@@ -108,7 +114,7 @@ public class DeckController : ControllerBase
     public IEnumerable<ReadDeckDto> GetDeck([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-        var user = _context.User.Where(x => x.UserName == userName).FirstOrDefault()
+        var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
             ?? throw new UnauthorizedAccessException("User not found");        
         return _mapper.Map<List<ReadDeckDto>>(_context.Decks.Include(x => x.DeckCards).Where(x => x.UserId == user.Id).Skip(skip).Take(take));
     }
@@ -134,6 +140,7 @@ public class DeckController : ControllerBase
                 CardName = x.Card.Name,
                 DeckName = x.Deck.Name,
                 ImageUrl = x.Card.ImageUrl,
+                Passcode = x.Card.Passcode,
                 Quantity = x.Quantity
             })
             .ToList();
@@ -151,6 +158,7 @@ public class DeckController : ControllerBase
     /// 404 NotFound quando o deck não existir.
     /// </returns>
     [HttpPut("{id}")]
+    [Authorize(Policy = "Player")]
     public IActionResult UpdateDeck(int id, [FromBody] UpdateDeckDto deckDto)
     {
         var deck = _context.Decks.FirstOrDefault(
@@ -170,6 +178,7 @@ public class DeckController : ControllerBase
     /// 404 NotFound quando o deck não existir.
     /// </returns>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Player")]
     public IActionResult DeleteDeck(int id)
     {
         var deck = _context.Decks.FirstOrDefault(
