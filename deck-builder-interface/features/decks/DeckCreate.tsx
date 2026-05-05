@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/features/auth/authService';
 import { deckService, Card } from './deckService';
+import { playerCollectionService, PlayerCard } from './playerCollectionService';
 import styles from './DeckCreate.module.css';
 
 /**
@@ -87,13 +89,14 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   
   // Data State
   const [availableCards, setAvailableCards] = useState<Card[]>([]);
+  const [playerCollection, setPlayerCollection] = useState<PlayerCard[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Filter State
   const [searchName, setSearchName] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
-  const [personalOnly, setPersonalOnly] = useState(false);
+  const [showFullDatabase, setShowFullDatabase] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
   // Advanced Filters State
@@ -114,14 +117,20 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
 
   useEffect(() => {
     const init = async () => {
+      if (!authService.isAuthenticated()) {
+        router.push('/login');
+        return;
+      }
       setIsLoading(true);
       try {
-        const [cards, colls] = await Promise.all([
+        const [cards, colls, pCollection] = await Promise.all([
           deckService.getAvailableCards(),
-          deckService.getCollections()
+          deckService.getCollections(),
+          playerCollectionService.getCollection()
         ]);
         setAvailableCards(cards);
         setCollections(colls);
+        setPlayerCollection(pCollection);
 
         if (initialDeckId) {
           // Fetch deck details
@@ -210,10 +219,16 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
         if (!hasAll) return false;
       }
 
+      // Personal Collection Filter (Show all only if showFullDatabase is true)
+      if (!showFullDatabase) {
+        const owned = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString());
+        if (!owned || owned.quantity <= 0) return false;
+      }
+
       return true;
     });
   }, [
-    availableCards, searchName, selectedCollection, 
+    availableCards, playerCollection, showFullDatabase, searchName, selectedCollection, 
     minAtk, maxAtk, minDef, maxDef, filterAttribute, 
     filterType, filterSubType, minLevel, maxLevel, 
     filterScale, filterBanStatus, filterLinkRating, filterLinkMarkers
@@ -233,21 +248,45 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   };
 
   const addCardToDeck = (card: Card) => {
-    // Check for 3 copy limit by name (standard YGO rule)
-    const currentCopies = [...mainDeck, ...extraDeck].filter(c => c.name === card.name).length;
-    if (currentCopies >= 3) {
-      showNotification(`Limite de 3 cópias: ${card.name}`, 'error');
+    // 1. Get owned quantity from personal collection
+    const ownedEntry = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString());
+    const ownedQuantity = ownedEntry ? ownedEntry.quantity : 0;
+
+    // 2. Check current count in deck (Main + Extra)
+    const countInMain = mainDeck.filter(c => c.name === card.name).length;
+    const countInExtra = extraDeck.filter(c => c.name === card.name).length;
+    const totalInDeck = countInMain + countInExtra;
+    
+    // 3. Rule check: Game limit (3)
+    if (totalInDeck >= 3) {
+      showNotification(`Você já possui 3 cópias de ${card.name} no deck!`, 'error');
+      return;
+    }
+
+    // 4. Ownership check: Personal limit
+    // We only allow adding cards if the user is NOT in "Show Full Database" mode
+    if (showFullDatabase) {
+      showNotification('Modo Banco Global: Adicione esta carta à sua coleção primeiro para usá-la no deck.', 'error');
+      return;
+    }
+
+    if (totalInDeck >= ownedQuantity) {
+      showNotification(`Você possui apenas ${ownedQuantity} cópia(s) de ${card.name} na sua coleção!`, 'error');
       return;
     }
 
     if (isExtraDeckCard(card)) {
-      if (extraDeck.length < 15) {
-        setExtraDeck(sortCards([...extraDeck, card]));
+      if (extraDeck.length >= 15) {
+        showNotification('O Extra Deck já possui o limite de 15 cartas!', 'error');
+        return;
       }
+      setExtraDeck(sortCards([...extraDeck, card]));
     } else {
-      if (mainDeck.length < 60) {
-        setMainDeck(sortCards([...mainDeck, card]));
+      if (mainDeck.length >= 60) {
+        showNotification('O Main Deck já possui o limite de 60 cartas!', 'error');
+        return;
       }
+      setMainDeck(sortCards([...mainDeck, card]));
     }
   };
 
@@ -275,6 +314,33 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   };
 
   const totalCards = mainDeck.length + extraDeck.length;
+
+  const copyToClipboard = () => {
+    if (mainDeck.length === 0 && extraDeck.length === 0) {
+      showNotification('O deck está vazio!', 'error');
+      return;
+    }
+
+    let ydkContent = '#main\n';
+    mainDeck.forEach(card => {
+      ydkContent += `${card.passcode}\n`;
+    });
+
+    ydkContent += '#extra\n';
+    extraDeck.forEach(card => {
+      ydkContent += `${card.passcode}\n`;
+    });
+
+    ydkContent += '!side\n';
+
+    navigator.clipboard.writeText(ydkContent).then(() => {
+      showNotification('YDK copiado para a área de transferência!', 'success');
+    }).catch(err => {
+      console.error('Erro ao copiar:', err);
+      showNotification('Erro ao copiar para o clipboard.', 'error');
+    });
+  };
+
   const canSave = mainDeck.length >= 40 && mainDeck.length <= 60 && extraDeck.length <= 15 && deckName.trim() !== '';
 
   const handleSave = async () => {
@@ -337,30 +403,34 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
 
         {/* Top Left: Controls */}
         <div className={styles.controlsBox}>
+          <div className={styles.topRow}>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>Nome do Deck</label>
+              <input 
+                type="text" 
+                className={styles.deckNameInput}
+                value={deckName}
+                onChange={(e) => setDeckName(e.target.value)}
+                placeholder="Digite o nome..."
+              />
+            </div>
+            <div className={styles.totalCounter}>
+              <span>{totalCards}</span> cartas no total
+            </div>
+          </div>
+
           <div className={styles.actionButtons}>
             <button className={styles.btnSave} onClick={handleSave} disabled={!canSave || isSaving}>
               {isSaving ? 'Salvando...' : 'Salvar Deck'}
             </button>
-            <button className={styles.btnExit} onClick={handleExit}>Sair</button>
+            <button className={styles.btnCopy} onClick={copyToClipboard}>Copiar YDK</button>
             <button 
               className={`${styles.btnSelectCover} ${isSelectingCover ? styles.btnSelectCoverActive : ''}`}
               onClick={() => setIsSelectingCover(!isSelectingCover)}
             >
-              {isSelectingCover ? 'Selecione uma carta...' : 'Definir carta capa do deck'}
+              {isSelectingCover ? 'Selecione uma carta...' : 'Definir carta capa'}
             </button>
-          </div>
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>Nome do Deck</label>
-            <input 
-              type="text" 
-              className={styles.deckNameInput}
-              value={deckName}
-              onChange={(e) => setDeckName(e.target.value)}
-              placeholder="Digite o nome..."
-            />
-          </div>
-          <div className={styles.totalCounter}>
-            Total: {totalCards} cartas
+            <button className={styles.btnExit} onClick={handleExit}>Sair</button>
           </div>
         </div>
 
@@ -374,13 +444,13 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
             />
-            <label className={styles.checkboxGroup}>
+            <label className={`${styles.checkboxGroup} ${showFullDatabase ? styles.checkboxActive : ''}`}>
               <input 
                 type="checkbox" 
-                checked={personalOnly}
-                onChange={(e) => setPersonalOnly(e.target.checked)}
+                checked={showFullDatabase}
+                onChange={(e) => setShowFullDatabase(e.target.checked)}
               />
-              Coleção Pessoal
+              Ver Banco Global
             </label>
           </div>
           <div className={styles.filterRow}>

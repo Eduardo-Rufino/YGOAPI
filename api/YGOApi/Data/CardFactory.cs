@@ -1,4 +1,4 @@
-﻿using YGOApi.Models;
+using YGOApi.Models;
 using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Data.Enums;
 
@@ -25,6 +25,7 @@ namespace YGOApi.Data
                 LinkRating = dto.LinkVal,
                 LinkMarkers = dto.LinkMarkers != null ? string.Join(",", dto.LinkMarkers) : null,
                 ImageUrl = dto.CardImages[0].ImageUrl,
+                Passcode = dto.Id,
             };
         }
     

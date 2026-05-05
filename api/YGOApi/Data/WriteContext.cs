@@ -3,20 +3,18 @@ using YGOApi.Models;
 
 namespace YGOApi.Data
 {
-    public class CardContext : DbContext
+    public class WriteContext : DbContext
     {
-        public CardContext(DbContextOptions<CardContext> opts)
+        public WriteContext(DbContextOptions<WriteContext> opts)
             :base(opts)
         {
                 
         }
 
         public DbSet<Card> Cards { get; set; }
-        public DbSet<Decks> Decks { get; set; }
+        public DbSet<Deck> Decks { get; set; }
         public DbSet<DeckCard> DeckCards { get; set; }
-
-        public DbSet<User> User { get; set; }
-
+        public DbSet<User> Users { get; set; }
         public DbSet<PlayerCollection> PlayerCollections { get; set; }
     }
 }

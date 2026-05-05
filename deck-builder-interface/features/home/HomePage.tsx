@@ -20,11 +20,11 @@ export const HomePage: React.FC = () => {
       </div>
 
       <div className={styles.bannersSection}>
-        <div className={`${styles.bannerCard} ${styles.bannerCollections}`}>
+        <Link href="/collections" className={`${styles.bannerCard} ${styles.bannerCollections}`}>
           <div className={styles.bannerIcon}>✦</div>
           <h2 className={styles.bannerTitle}>Coleções Disponíveis</h2>
           <p className={styles.bannerDesc}>Explore as últimas coleções e expanda sua biblioteca de cartas.</p>
-        </div>
+        </Link>
 
         <div className={`${styles.bannerCard} ${styles.bannerBanList}`}>
           <div className={styles.bannerIcon}>⚔</div>

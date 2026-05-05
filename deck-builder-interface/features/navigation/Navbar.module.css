@@ -78,3 +78,27 @@
 .navLink:hover::after {
   transform: scaleX(1);
 }
+
+.navUser {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ADEBB3;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.logoutBtn {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #f87171;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.logoutBtn:hover {
+  color: #fca5a5;
+}

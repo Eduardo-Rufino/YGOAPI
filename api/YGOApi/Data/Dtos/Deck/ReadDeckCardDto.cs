@@ -1,4 +1,4 @@
-﻿using YGOApi.Models;
+using YGOApi.Models;
 
 namespace YGOApi.Data.Dtos.Deck
 {
@@ -10,6 +10,7 @@ namespace YGOApi.Data.Dtos.Deck
         public int? Attack { get; set; }
         public int? Defense { get; set; }
         public string ImageUrl { get; set; }
+        public int Passcode { get; set; }
         public int Quantity { get; set; }
     }
 }

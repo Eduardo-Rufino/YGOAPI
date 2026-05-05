@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace YGOApi.Data.Dtos.YgoProDeck
 {
@@ -9,6 +9,7 @@ namespace YGOApi.Data.Dtos.YgoProDeck
 
     public class YgoProDeckCardDto
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public List<string>? TypeLine { get; set; }
         public string Type { get; set; }
