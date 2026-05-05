@@ -8,7 +8,7 @@ RUN dotnet restore "api/YGOApi/YGOApi.csproj"
 # copy everything else and publish
 COPY . .
 WORKDIR /src/api/YGOApi
-RUN dotnet publish "api/YGOApi/YGOApi.csproj" -c Release -o /app/publish
+RUN dotnet publish "YGOApi.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
