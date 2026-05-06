@@ -1,7 +1,10 @@
 'use client';
 
+import { API_BASE_URL } from '@/features/config';
+
 const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer ? 'http://ygoapi' : 'http://localhost:8080';
+
+
 
 const TOKEN_KEY = 'ygo_auth_token';
 const USERNAME_KEY = 'ygo_auth_username';

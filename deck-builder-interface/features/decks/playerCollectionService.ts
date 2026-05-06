@@ -1,6 +1,8 @@
 'use client';
 
 import { authService } from '@/features/auth/authService';
+import { API_BASE_URL } from '@/features/config';
+
 
 export interface PlayerCard {
   id: number;
@@ -9,8 +11,6 @@ export interface PlayerCard {
   quantity: number;
 }
 
-const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer ? 'http://ygoapi' : 'http://localhost:8080';
 
 export const playerCollectionService = {
   /**
