@@ -20,10 +20,6 @@ builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 
 builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
 
-builder.Services.AddDbContext<WriteContext>(opts =>
-    opts.UseNpgsql(connectionString,
-        npgsqlOptions => npgsqlOptions.EnableRetryOnFailure()));
-
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<CardAtribute>();
 dataSourceBuilder.MapEnum<CardBanStatus>();
@@ -34,7 +30,9 @@ dataSourceBuilder.MapEnum<UserRole>();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WriteContext>(opts =>
-    opts.UseNpgsql(dataSource));
+    opts.UseNpgsql(dataSource, npgsqlOptions => {
+        npgsqlOptions.EnableRetryOnFailure(); // Ative o retry aqui dentro
+    }));
 
 builder.Services.AddAuthentication(opts =>
 {
@@ -102,27 +100,27 @@ app.UseAuthorization();
 
 app.MapControllers();
 // Apply EF Core migrations at startup with simple retry to wait for the DB to be ready
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    var db = services.GetRequiredService<WriteContext>();
-    const int maxRetries = 10;
-    for (int attempt = 1; attempt <= maxRetries; attempt++)
-    {
-        try
-        {
-            db.Database.Migrate();
-            logger.LogInformation("Database migrations applied.");
-            break;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Database migration attempt {Attempt} of {Max} failed.", attempt, maxRetries);
-            if (attempt == maxRetries) throw;
-            Thread.Sleep(TimeSpan.FromSeconds(5));
-        }
-    }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var logger = services.GetRequiredService<ILogger<Program>>();
+//    var db = services.GetRequiredService<WriteContext>();
+//    const int maxRetries = 10;
+//    for (int attempt = 1; attempt <= maxRetries; attempt++)
+//    {
+//        try
+//        {
+//            db.Database.Migrate();
+//            logger.LogInformation("Database migrations applied.");
+//            break;
+//        }
+//        catch (Exception ex)
+//        {
+//            logger.LogWarning(ex, "Database migration attempt {Attempt} of {Max} failed.", attempt, maxRetries);
+//            if (attempt == maxRetries) throw;
+//            Thread.Sleep(TimeSpan.FromSeconds(5));
+//        }
+//    }
+//}
 
 app.Run();
