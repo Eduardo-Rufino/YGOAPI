@@ -1,4 +1,6 @@
 import { authService } from '@/features/auth/authService';
+import { API_BASE_URL } from '@/features/config';
+
 
 export interface Card {
   name: string;
@@ -31,9 +33,6 @@ export interface Deck {
   cardCount?: number; // Total number of cards
 }
 
-const isServer = typeof window === 'undefined';
-// Use internal docker network URL on the server, and localhost on the client browser
-const API_BASE_URL = isServer ? 'http://ygoapi' : 'http://localhost:8080';
 
 export const deckService = {
   getDecks: async (): Promise<Deck[]> => {

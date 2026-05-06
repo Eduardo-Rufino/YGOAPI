@@ -1,7 +1,7 @@
 import { authService } from '../auth/authService';
+import { API_BASE_URL } from '@/features/config';
 
-const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer ? 'http://ygoapi' : 'http://localhost:8080';
+
 
 export interface YgoProDeckCardDto {
   id: number;
