@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # copy csproj and restore as distinct layers
-COPY ["api/YGOApi/YGOApi.csproj", "api/YGOApi/"]
+COPY ["YGOApi/YGOApi.csproj", "YGOApi/"]
 RUN dotnet restore "api/YGOApi/YGOApi.csproj"
 
 # copy everything else and publish
