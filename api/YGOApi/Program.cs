@@ -68,13 +68,9 @@ builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins(
-                            "http://localhost:3000", // Para seus testes locais
-                            "https://ygoapi-gamma.vercel.app", // Seu domínio principal na Vercel
-                            "https://ygoapi.vercel.app" // Um alias comum que a Vercel cria
-                         )
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+        policy => policy.AllowAnyOrigin() // Isso libera QUALQUER URL da Vercel
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 
 
