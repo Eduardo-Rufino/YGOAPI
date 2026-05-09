@@ -769,13 +769,24 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                 <div key={i} className={styles.skeletonCard} />
               ))
             ) : (
-              filteredCards.map((card, idx) => (
+              filteredCards.map((card, idx) => {
+                const ownedQuantity = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString())?.quantity || 0;
+                const countInMain = mainDeck.filter(c => c.name === card.name).length;
+                const countInExtra = extraDeck.filter(c => c.name === card.name).length;
+                const remaining = ownedQuantity - countInMain - countInExtra;
+
+                return (
                 <div 
                   key={`db-${idx}`} 
                   className={`${styles.cardItem} ${styles.cardItemDatabase}`} 
                   onClick={() => addCardToDeck(card)}
                   onMouseEnter={() => setHoveredCard(card)}
                 >
+                  {ownedQuantity > 0 && (
+                    <div className={`${styles.ownedBadge} ${remaining <= 0 ? styles.ownedBadgeZero : ''}`}>
+                      x{remaining}
+                    </div>
+                  )}
                   <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
                   <div className={styles.cardInfoBox}>
                     <span className={styles.cardName}>{card.name}</span>
@@ -784,7 +795,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                     </div>
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>
