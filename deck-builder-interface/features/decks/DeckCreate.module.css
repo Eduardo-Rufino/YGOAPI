@@ -718,6 +718,7 @@
 }
 
 .cardItemDatabase {
+  position: relative;
   width: 75px;
   height: 135px;
   background: #24324D; /* Deep Blue */
@@ -785,4 +786,23 @@
   color: #8A2BE2; /* Primary */
   font-weight: 800;
   text-align: center;
+}
+
+.ownedBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #10b981;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.ownedBadgeZero {
+  background: #ef4444;
 }
