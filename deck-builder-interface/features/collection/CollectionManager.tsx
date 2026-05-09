@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/features/auth/authService';
 import { deckService, Card } from '@/features/decks/deckService';
@@ -16,12 +16,15 @@ export const CollectionManager: React.FC = () => {
   const [localQuantities, setLocalQuantities] = useState<Record<number, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   // Filter State
   const [searchName, setSearchName] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [collections, setCollections] = useState<string[]>([]);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
@@ -67,6 +70,63 @@ export const CollectionManager: React.FC = () => {
       ...prev,
       [cardId]: Math.max(0, (prev[cardId] || 0) + delta)
     }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split('\n');
+      const passcodes = lines
+        .map(line => line.trim())
+        .filter(line => line && !line.startsWith('#') && !line.startsWith('!'));
+
+      const passcodeCounts: Record<string, number> = {};
+      passcodes.forEach(code => {
+        passcodeCounts[code] = (passcodeCounts[code] || 0) + 1;
+      });
+
+      const toAdd: { cardId: number; quantity: number }[] = [];
+      let notFoundCount = 0;
+
+      Object.entries(passcodeCounts).forEach(([passcode, quantity]) => {
+        const card = availableCards.find(c => c.passcode.toString() === passcode);
+        if (card && card.id !== undefined) {
+          toAdd.push({ cardId: Number(card.id), quantity });
+        } else {
+          notFoundCount++;
+        }
+      });
+
+      if (toAdd.length > 0) {
+        await playerCollectionService.addCards(toAdd);
+        const updatedColl = await playerCollectionService.getCollection();
+        setPlayerCollection(updatedColl);
+        
+        const quantities: Record<number, number> = {};
+        updatedColl.forEach(pc => {
+          quantities[pc.cardId] = pc.quantity;
+        });
+        setLocalQuantities(quantities);
+
+        if (notFoundCount > 0) {
+          showNotification(`Importado! ${notFoundCount} cartas do arquivo não foram encontradas no banco.`, 'success');
+        } else {
+          showNotification('Arquivo YDK importado com sucesso!', 'success');
+        }
+      } else {
+        showNotification('Nenhuma carta válida encontrada no arquivo YDK.', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to import YDK', error);
+      showNotification('Erro ao processar o arquivo YDK', 'error');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const filteredCards = useMemo(() => {
@@ -126,6 +186,20 @@ export const CollectionManager: React.FC = () => {
       <header className={styles.header}>
         <h1>Minha Coleção Pessoal</h1>
         <div className={styles.actions}>
+          <input 
+            type="file" 
+            accept=".ydk" 
+            hidden 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+          />
+          <button 
+            className={`${styles.saveButton} ${styles.importButton}`} 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting || isLoading}
+          >
+            {isImporting ? 'Importando...' : 'Importar YDK'}
+          </button>
           <button 
             className={styles.saveButton} 
             disabled={!hasChanges || isSaving}

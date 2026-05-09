@@ -49,6 +49,15 @@
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
+.importButton {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.importButton:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
 .saveButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
