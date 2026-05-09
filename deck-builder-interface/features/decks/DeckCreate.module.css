@@ -29,7 +29,7 @@
 /* Toast Notifications */
 .toast {
   position: fixed;
-  top: 2rem;
+  bottom: 2rem;
   right: 2rem;
   padding: 1rem 2rem;
   border-radius: 12px;
