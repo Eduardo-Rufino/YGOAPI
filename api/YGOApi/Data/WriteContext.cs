@@ -30,5 +30,8 @@ namespace YGOApi.Data
         public DbSet<DeckCard> DeckCards { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<PlayerCollection> PlayerCollections { get; set; }
+        public DbSet<Galera> Galeras { get; set; }
+
+        public DbSet<UserGalera> UserGalera { get; set; }
     }
 }
