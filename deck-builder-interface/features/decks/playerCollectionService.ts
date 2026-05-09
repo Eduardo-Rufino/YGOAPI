@@ -21,7 +21,7 @@ export const playerCollectionService = {
     if (!userId) return [];
 
     try {
-      const response = await fetch(`${API_BASE_URL}/PlayerCollection/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/PlayerCollection/${userId}?skip=0&take=100000`, {
         headers: {
           ...authService.getAuthHeaders(),
         },
