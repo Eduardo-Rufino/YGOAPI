@@ -1,12 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using YGOApi.Data;
-using YGOApi.Data.Dtos.Autentication;
-using YGOApi.Data.Dtos.Deck;
 using YGOApi.Data.Dtos.Galera;
-using YGOApi.Integrations;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;
@@ -16,15 +12,14 @@ namespace YGOApi.Controllers;
 public class GaleraController : ControllerBase
 {
     private WriteContext _context;
-    private IMapper _mapper;
 
-    public GaleraController(WriteContext context, IMapper mapper, ICardProvider provider)
+    public GaleraController(WriteContext context)
     {
         _context = context;
-        _mapper = mapper;
     }
 
     [HttpPatch("AddMembers/{galeraId}")]
+    [Authorize("Admin")]
     public IActionResult AddMembers(int galeraId, [FromBody] List<int> membersId) 
     {
         _context.UserGalera.AddRange(membersId.Select(memberId => new UserGalera
@@ -33,6 +28,21 @@ public class GaleraController : ControllerBase
             GaleraId = galeraId
         }));
         
+        _context.SaveChanges();
+        return Ok();
+    }
+
+    [HttpPatch("RemoveMembers/{galeraId}")]
+    [Authorize("Admin")]
+    public IActionResult RemoveMember(int galeraId, [FromQuery] int memberId)
+    {
+        var user = _context.UserGalera.FirstOrDefault(x => x.GaleraId == galeraId && x.UserId == memberId);
+        if (user == null)
+        {
+            return BadRequest("Usuário não pertence à galera");
+        }
+        _context.UserGalera.Remove(user);
+
         _context.SaveChanges();
         return Ok();
     }
@@ -46,12 +56,15 @@ public class GaleraController : ControllerBase
             ?? throw new UnauthorizedAccessException("User not found");
 
         var members = _context.UserGalera.Where(x => x.UserId == user.Id).ToList();
+        var galeraId = members?.FirstOrDefault()?.Id;
 
-        return Ok(members);
+        var collections = galeraId != null ? _context.Galeras.Where(x => x.Id == galeraId) : null;
+
+        return Ok(new{ members, collections});
     }
 
-    
     [HttpPost]
+    [Authorize("Admin")]
     public IActionResult AddGalera([FromBody] CreateGaleraDto galeraDto)
     {
         var galera = new Galera
@@ -64,6 +77,7 @@ public class GaleraController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize("Admin")]
     public IActionResult DeleteGalera(int id)
     {
         var galera = _context.Galeras.FirstOrDefault(
@@ -74,4 +88,3 @@ public class GaleraController : ControllerBase
         return NoContent();
     }
 }
-

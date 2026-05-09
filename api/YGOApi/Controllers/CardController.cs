@@ -1,12 +1,9 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Card;
-using YGOApi.Integrations;
-using YGOApi.Models;
 
 namespace YGOApi.Controllers;
 
@@ -32,21 +29,6 @@ public class CardController : ControllerBase
     {
         _context = context;
         _mapper = mapper;
-    }
-
-    /// <summary>
-    /// Cria uma nova carta e persiste no banco de dados.
-    /// </summary>
-    /// <param name="cardDto">DTO com os dados necessários para criar a carta.</param>
-    /// <response code="201">Inserção realizada com sucesso.</response>
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult AddCard([FromBody] CreateCardDto cardDto)
-    {
-        Card card = _mapper.Map<Card>(cardDto);
-        _context.Cards.Add(card);
-        _context.SaveChanges();
-        return CreatedAtAction(nameof(GetCardbyID), new { id = card.Id}, card);
     }
 
     /// <summary>
@@ -113,23 +95,6 @@ public class CardController : ControllerBase
         if (card == null) return NotFound();
         var cardDto = _mapper.Map<ReadCardDto>(card);
         return Ok(cardDto);
-    }
-
-    /// <summary>
-    /// Atualiza os campos de uma carta existente.
-    /// </summary>
-    /// <param name="id">Identificador da carta a ser atualizada.</param>
-    /// <param name="cardDto">DTO contendo os campos a atualizar.</param>
-    /// <returns>204 quando a atualização for bem-sucedida; 404 se a carta não existir.</returns>
-    [HttpPut("{id}")]
-    public IActionResult UpdateCard(int id, [FromBody] UpdateCardDto cardDto)
-    {
-        var card = _context.Cards.FirstOrDefault(
-            card => card.Id == id);
-        if(card == null) return NotFound();
-        _mapper.Map(cardDto, card);
-        _context.SaveChanges();
-        return NoContent();
     }
 
     /// <summary>

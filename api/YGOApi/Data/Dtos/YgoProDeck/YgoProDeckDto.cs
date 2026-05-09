@@ -30,10 +30,12 @@ namespace YGOApi.Data.Dtos.YgoProDeck
         public string? CardSet { get; set; } = string.Empty;
     }
 
-
     public class YgoProDeckImageDto
     {
         [JsonPropertyName("image_url")]
         public string ImageUrl { get; set; }
+
+        [JsonPropertyName("image_url_small")]
+        public string ImagelUrlSmall { get; set; }
     }
 }

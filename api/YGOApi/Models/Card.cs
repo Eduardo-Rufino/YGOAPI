@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
 namespace YGOApi.Models;
@@ -8,6 +7,8 @@ public class Card
     [Key]
     [Required]
     public int Id { get; set; }
+
+    public int? CollectionId { get; set; }
 
     [Required(ErrorMessage ="O Nome é obrigatório")]
     [MaxLength(60, ErrorMessage = "O tamanho máximo Nome não pode exceder 60 caracteres")]
@@ -33,8 +34,8 @@ public class Card
         
     public int? Defense { get; set; }
 
-    [Required(ErrorMessage = "A coleção é obrigatória")]
-    public string Collection { get; set; }
+    // TODO: Remover propriedade
+    public string? Collection { get; set; }
 
     public string? Archetype { get; set; }
 
@@ -45,8 +46,12 @@ public class Card
     public string? LinkMarkers { get; set; }
 
     public string ImageUrl { get; set; }
+    public string ImageUrlSmall { get; set; }
 
     public int Passcode { get; set; }
 
     public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
+
+    [ForeignKey(nameof(CollectionId))]
+    public virtual CardCollection CardCollection { get; set; }
 }

@@ -41,7 +41,7 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     /// </returns>
     [HttpGet("{collectionName}")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> GetCardByProviderCollection(string collectionName)
+    public async Task<IActionResult> GetCardsByProviderCollection(string collectionName)
     {
         var response = await _provider.ListCardByCollection(collectionName);
         
@@ -59,37 +59,45 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     /// - A conversão é feita via <see cref="CardFactory.CreateCardFromYgoProDeckDto"/>.<br/>
     /// - Não há validação explícita de duplicatas ou integridade aqui; considerar adições futuras para deduplicação e validação.
     /// </remarks>
-    [HttpPost("AddCardProvider")]
+    [HttpPost("AddCollection/{galeraId}")]
     [Authorize(Policy = "Admin")]
-    public IActionResult AddCardsProvider([FromBody] List<YgoProDeckCardDto> cardList)
+    public IActionResult AddCardsCollectionProvider(int galeraId, [FromBody] List<YgoProDeckCardDto> cardList)
     {
-        List<Card> cardsToInsert = new List<Card>();
-
-        // Get all existing Passcodes and ImageUrls to check in memory (performance)
-        var existingCards = _context.Cards
-            .Select(c => new { c.Passcode, c.ImageUrl })
-            .ToList();
-
-        foreach (var dto in cardList)
-        { 
-            // Check if this specific card (Passcode + Image) already exists
-            bool exists = existingCards.Any(c => c.Passcode == dto.Id && c.ImageUrl == dto.CardImages[0].ImageUrl);
-
-            if (!exists)
-            {
-                var newCard = CardFactory.CreateCardFromYgoProDeckDto(dto);
-                cardsToInsert.Add(newCard);
-                
-                // Add to our local check list to avoid duplicates within the same batch
-                existingCards.Add(new { Passcode = dto.Id, ImageUrl = dto.CardImages[0].ImageUrl });
-            }
-        }
-
-        if (cardsToInsert.Count > 0)
+        CardCollection? cardCollection = _context.CardCollections.FirstOrDefault(x => x.Name == cardList[0].CardSet);
+        if (cardCollection != null)
         {
-            _context.Cards.AddRange(cardsToInsert);
-            _context.SaveChanges();
+            if (!_context.GaleraCollections.Any(x => x.GaleraId == galeraId && x.CardCollectionId == cardCollection.Id))
+            {
+                _context.GaleraCollections.Add(new GaleraCollection()
+                {
+                    GaleraId = galeraId,
+                    CardCollectionId = cardCollection.Id,
+                });
+
+                _context.SaveChanges();
+
+                return NoContent();
+            }
+
+            return Ok("Coleção já inserida!");
         }
+
+        cardCollection = new CardCollection(cardList[0].CardSet);
+
+        _context.CardCollections.Add(cardCollection);
+
+        List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto)).ToList();
+
+        cardsToInsert.ForEach(x => x.CollectionId = cardCollection.Id);
+        _context.Cards.AddRange(cardsToInsert);
+
+        _context.GaleraCollections.Add(new GaleraCollection()
+        {
+            GaleraId = galeraId,
+            CardCollectionId = cardCollection.Id,
+        });
+
+        _context.SaveChanges();
 
         return NoContent();
     }

@@ -33,5 +33,9 @@ namespace YGOApi.Data
         public DbSet<Galera> Galeras { get; set; }
 
         public DbSet<UserGalera> UserGalera { get; set; }
+
+        public DbSet<CardCollection> CardCollections { get; set; }
+
+        public DbSet<GaleraCollection> GaleraCollections { get; set; }
     }
 }
