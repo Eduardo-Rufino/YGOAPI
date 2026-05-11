@@ -1,6 +1,8 @@
-﻿namespace YGOApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class CardCollection(string CollectionName)
+namespace YGOApi.Models;
+
+public class CardCollection
 {
     [Key]
     [Required]
@@ -8,5 +10,5 @@ public class CardCollection(string CollectionName)
 
     [Required(ErrorMessage = "O Nome é obrigatório")]
     [MaxLength(60, ErrorMessage = "O tamanho máximo Nome não pode exceder 60 caracteres")]
-    public string Name { get; set; } = CollectionName;
+    public string Name { get; set; }
 }

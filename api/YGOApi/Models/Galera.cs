@@ -1,4 +1,6 @@
-﻿namespace YGOApi.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace YGOApi.Models;
 
 public class Galera
 {

@@ -25,8 +25,8 @@ public class GaleraController : ControllerBase
         _context.UserGalera.AddRange(membersId.Select(memberId => new UserGalera
         {
             UserId = memberId,
-            GaleraId = galeraId
-        }));
+            GaleraId = galeraId,
+        }).ToList());
         
         _context.SaveChanges();
         return Ok();
