@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using YGOApi.Data.Enums;
 
 namespace YGOApi.Models;

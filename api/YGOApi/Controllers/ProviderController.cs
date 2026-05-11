@@ -82,9 +82,14 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
             return Ok("Coleção já inserida!");
         }
 
-        cardCollection = new CardCollection(cardList[0].CardSet);
+        cardCollection = new CardCollection()
+        {
+            Name = cardList[0].CardSet
+        };
 
         _context.CardCollections.Add(cardCollection);
+
+        _context.SaveChanges();
 
         List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto)).ToList();
 
