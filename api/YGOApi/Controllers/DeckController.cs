@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Deck;
-using YGOApi.Integrations;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;
@@ -18,7 +17,6 @@ namespace YGOApi.Controllers;
 [Route("[controller]")]
 public class DeckController : ControllerBase
 {
-
     /// <summary>
     /// Contexto do banco de dados para acesso às entidades relacionadas a cards e decks.
     /// </summary>
@@ -27,22 +25,16 @@ public class DeckController : ControllerBase
     /// Mapper utilizado para converter entre DTOs e entidades do domínio.
     /// </summary>
     private IMapper _mapper;
-    /// <summary>
-    /// Provedor externo/opcional de cards (injetado para cenários que necessitem dele).
-    /// </summary>
-    private ICardProvider _provider;
 
     /// <summary>
     /// Construtor do controlador que recebe dependências via injeção.
     /// </summary>
     /// <param name="context">Instância de <see cref="WriteContext"/> para acesso a dados.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para mapeamentos entre DTOs e entidades.</param>
-    /// <param name="provider">Instância de <see cref="ICardProvider"/> para operações relacionadas a cards (opcional).</param>
-    public DeckController(WriteContext context, IMapper mapper, ICardProvider provider)
+    public DeckController(WriteContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
-        _provider = provider;
     }
 
     /// <summary>
@@ -192,4 +184,3 @@ public class DeckController : ControllerBase
         return NoContent();
     }
 }
-

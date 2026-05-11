@@ -19,5 +19,4 @@ public class User
     [Required(ErrorMessage = "O password é obrigatório")]
     public string Password { get; set; }
     public UserRole Role { get; set; } 
-     
 }

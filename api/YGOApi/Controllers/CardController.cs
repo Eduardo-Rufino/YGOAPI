@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Card;
+using YGOApi.Models;
 
 namespace YGOApi.Controllers;
 
@@ -13,9 +14,9 @@ namespace YGOApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
+[Authorize(Policy = "Player")]
 public class CardController : ControllerBase
 {
-
     private WriteContext _context;
     private IMapper _mapper;
 
@@ -24,7 +25,6 @@ public class CardController : ControllerBase
     /// </summary>
     /// <param name="context">Contexto do banco de dados usado para persistência de cartas.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para conversão entre entidades e DTOs.</param>
-    /// <param name="provider">Provedor externo de cartas (injetado para futuras integrações).</param>
     public CardController(WriteContext context, IMapper mapper)
     {
         _context = context;
@@ -36,14 +36,24 @@ public class CardController : ControllerBase
     /// </summary>
     /// <param name="skip">Quantidade de itens a pular (offset). Padrão = 0.</param>
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
+    /// <param name="userId">Parêmetro opcional que, se estiver preenchido, busca as cartas do user em questão.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    [Authorize(Policy = "Player")]
-    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50, int? userId = null)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-        var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
-            ?? throw new UnauthorizedAccessException("User not found");
+        User? user = null;
+
+        if (userId == null)
+        {
+            user = _context.Users.FirstOrDefault(x => x.UserName == userName)
+                ?? throw new UnauthorizedAccessException("User not found");
+        }
+        else
+        {
+            user = _context.Users.FirstOrDefault(x => x.Id == userId)
+                ?? throw new UnauthorizedAccessException("User not found");
+        }
 
         var query = _context.Cards
         .GroupJoin(

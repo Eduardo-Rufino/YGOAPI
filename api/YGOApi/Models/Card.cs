@@ -52,6 +52,7 @@ public class Card
 
     public int Passcode { get; set; }
 
+    //TODO: Remover isso (usar tabela banlist)
     public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 
     [ForeignKey(nameof(CollectionId))]

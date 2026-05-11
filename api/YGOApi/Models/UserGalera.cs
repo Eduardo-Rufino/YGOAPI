@@ -14,4 +14,6 @@ public class UserGalera
     public int UserId { get; set; }
     
     public int GaleraId { get; set; }
+
+    public int DuelPoints { get; set; } = 0;
 }
