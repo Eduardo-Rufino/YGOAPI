@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace YGOApi.Models;
@@ -15,7 +14,6 @@ public class PlayerCollection
 
     public int PlayerId { get; set; }
 
-    [DefaultValue(1)]
     public int Quantity { get; set; } = 1;    
     
     [ForeignKey(nameof(CardId))]
