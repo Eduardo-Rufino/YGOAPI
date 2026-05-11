@@ -52,6 +52,10 @@ public class Card
 
     public int Passcode { get; set; }
 
+    public CardRarity Rarity { get; set; }
+
+    public int Quantity { get; set; } = 1;
+
     //TODO: Remover isso (usar tabela banlist)
     public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 

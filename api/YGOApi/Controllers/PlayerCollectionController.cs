@@ -1,9 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.CompilerServices;
 using YGOApi.Data;
-using YGOApi.Data.Dtos.Deck;
 using YGOApi.Data.Dtos.PlayerCollection;
 using YGOApi.Models;
 
@@ -18,6 +16,7 @@ namespace YGOApi.Controllers;
 /// </remarks>
 [ApiController]
 [Route("[controller]")]
+[Authorize(Policy = "Player")]
 public class PlayerCollectionController : ControllerBase
 {
     /// <summary>
@@ -55,7 +54,6 @@ public class PlayerCollectionController : ControllerBase
     /// - As alterações são persistidas chamando `_context.SaveChanges()`.
     /// </remarks>
     [HttpPost("Add/{playerId}")]
-    [Authorize(Policy = "Player")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult AddCards(int playerId, [FromBody]List<UpdatePlayerCollectionDto> newCards)
     {
@@ -119,7 +117,6 @@ public class PlayerCollectionController : ControllerBase
     /// - As alterações são persistidas com `_context.SaveChanges()`.
     /// </remarks>
     [HttpPost("Remove/{playerId}")]
-    [Authorize(Policy = "Player")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult RemoveCards(int playerId, [FromBody] List<UpdatePlayerCollectionDto> cardsToRemove)
     {
@@ -178,4 +175,3 @@ public class PlayerCollectionController : ControllerBase
         );
     }
 }
-

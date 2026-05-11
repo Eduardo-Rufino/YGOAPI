@@ -27,6 +27,21 @@ public class CardFactory
             ImageUrl = dto.CardImages[0].ImageUrl,
             ImageUrlSmall = dto.CardImages[0].ImagelUrlSmall,
             Passcode = dto.Id,
+            Rarity = dto.Rarity,
+            Quantity = SetInitialQuantity(dto.Rarity)
+        };
+    }
+
+    private static int SetInitialQuantity(CardRarity rarity)
+    {
+        return rarity switch
+        {
+            CardRarity.COMMON => 16,
+            CardRarity.RARE => 12,
+            CardRarity.SUPER_RARE => 8,
+            CardRarity.ULTRA_RARE => 6,
+            CardRarity.SECRET_RARE => 4,
+            _ => 4,
         };
     }
 
