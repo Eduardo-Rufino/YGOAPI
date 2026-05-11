@@ -13,9 +13,9 @@ namespace YGOApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
+[Authorize(Policy = "Player")]
 public class CardController : ControllerBase
 {
-
     private WriteContext _context;
     private IMapper _mapper;
 
@@ -24,7 +24,6 @@ public class CardController : ControllerBase
     /// </summary>
     /// <param name="context">Contexto do banco de dados usado para persistência de cartas.</param>
     /// <param name="mapper">Instância de <see cref="IMapper"/> para conversão entre entidades e DTOs.</param>
-    /// <param name="provider">Provedor externo de cartas (injetado para futuras integrações).</param>
     public CardController(WriteContext context, IMapper mapper)
     {
         _context = context;
@@ -38,7 +37,6 @@ public class CardController : ControllerBase
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    [Authorize(Policy = "Player")]
     public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
