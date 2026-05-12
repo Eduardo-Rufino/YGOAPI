@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useNavigation } from './useNavigation';
 import { authService } from '@/features/auth/authService';
+import { galeraService, Galera } from '@/features/galeras/galeraService';
 import styles from './Navbar.module.css';
 
 /**
@@ -17,6 +18,15 @@ export const Navbar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [galeras, setGaleras] = useState<Galera[]>([]);
+  const [activeGaleraId, setActiveGaleraId] = useState<number | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const closeMenu = () => {
+    setIsMobileMenuOpen(false);
+    setIsDropdownOpen(false);
+  };
 
   // Sync auth state on mount and when localStorage changes (e.g. after login/logout)
   useEffect(() => {
@@ -34,31 +44,87 @@ export const Navbar: React.FC = () => {
     // Listen for auth changes dispatched by authService (same-tab) and storage (cross-tab)
     window.addEventListener('auth-change', syncAuth);
     window.addEventListener('storage', syncAuth);
+    window.addEventListener('focus', syncAuth); // Re-validate when user returns to tab
+
+    const handleGaleraChange = () => {
+      setActiveGaleraId(galeraService.getActiveGaleraId());
+    };
+    window.addEventListener('active-galera-changed', handleGaleraChange);
+
     return () => {
       window.removeEventListener('auth-change', syncAuth);
       window.removeEventListener('storage', syncAuth);
+      window.removeEventListener('focus', syncAuth);
+      window.removeEventListener('active-galera-changed', handleGaleraChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      galeraService.getMyGaleras().then(g => {
+        setGaleras(g);
+        const currentActive = galeraService.getActiveGaleraId();
+        if (!currentActive && g.length > 0) {
+          galeraService.setActiveGaleraId(g[0].id);
+        } else {
+          setActiveGaleraId(currentActive);
+        }
+      });
+    } else {
+      setGaleras([]);
+      setActiveGaleraId(null);
+    }
+  }, [isLoggedIn]);
+
+  const handleGaleraSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    galeraService.setActiveGaleraId(Number(e.target.value));
+  };
 
   const handleLogout = () => {
     authService.logout();
     setIsLoggedIn(false);
     setUsername(null);
     setIsAdmin(false);
+    closeMenu();
     router.push('/');
   };
 
   return (
     <nav className={styles.navbar}>
-      <Link href="/" className={styles.logo}>
-        Yu-Gi-Oh! Da Galera 2.0
-      </Link>
+      <div className={styles.brandGroup}>
+        <Link href="/" className={styles.logo} onClick={closeMenu}>
+          Yu-Gi-Oh! Da Galera 2.0
+        </Link>
+        {isLoggedIn && galeras.length > 0 && (
+          <select 
+            className={styles.galeraSelect} 
+            value={activeGaleraId || ''} 
+            onChange={handleGaleraSelect}
+            title="Sua Galera Ativa"
+          >
+            {galeras.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
 
-      <ul className={styles.navLinks}>
+      <button 
+        className={styles.hamburger} 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="Toggle menu"
+      >
+        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen1 : ''}`}></span>
+        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen2 : ''}`}></span>
+        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen3 : ''}`}></span>
+      </button>
+
+      <ul className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
         <li>
           <Link
             href="/"
             className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}
+            onClick={closeMenu}
           >
             Home
           </Link>
@@ -69,6 +135,7 @@ export const Navbar: React.FC = () => {
               href="/admin/import"
               className={`${styles.navLink} ${isActive('/admin/import') ? styles.active : ''}`}
               style={{ color: '#FCD34D' }} // Gold-ish for admin
+              onClick={closeMenu}
             >
               Painel Admin
             </Link>
@@ -78,22 +145,31 @@ export const Navbar: React.FC = () => {
           <Link
             href="/decks"
             className={`${styles.navLink} ${isActive('/decks') && !isActive('/decks/create') ? styles.active : ''}`}
+            onClick={closeMenu}
           >
             Decks
           </Link>
         </li>
-        <li>
-          <Link
-            href="/decks/create"
-            className={`${styles.navLink} ${isActive('/decks/create') ? styles.active : ''}`}
-          >
-            Create Deck
-          </Link>
+        <li 
+          className={styles.navDropdownItem}
+          onMouseEnter={() => setIsDropdownOpen(true)}
+          onMouseLeave={() => setIsDropdownOpen(false)}
+        >
+          <span className={styles.navLink}>Galeras ▾</span>
+          <ul className={`${styles.dropdownMenu} ${isDropdownOpen ? styles.dropdownMenuShow : ''}`}>
+            <li>
+              <Link href="/galeras/create" onClick={closeMenu} className={styles.dropdownLink}>Criar Galera</Link>
+            </li>
+            <li>
+              <Link href="/galeras/manage" onClick={closeMenu} className={styles.dropdownLink}>Gerenciar Galera</Link>
+            </li>
+          </ul>
         </li>
         <li>
           <Link
             href="/collection"
             className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`}
+            onClick={closeMenu}
           >
             Minha Coleção
           </Link>
@@ -116,6 +192,7 @@ export const Navbar: React.FC = () => {
               <Link
                 href="/login"
                 className={`${styles.navLink} ${isActive('/login') ? styles.active : ''}`}
+                onClick={closeMenu}
               >
                 Login
               </Link>
@@ -124,6 +201,7 @@ export const Navbar: React.FC = () => {
               <Link
                 href="/register"
                 className={`${styles.navLink} ${isActive('/register') ? styles.active : ''}`}
+                onClick={closeMenu}
               >
                 Register
               </Link>

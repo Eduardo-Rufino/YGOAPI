@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
 namespace YGOApi.Data.Dtos.Card
@@ -38,6 +38,8 @@ namespace YGOApi.Data.Dtos.Card
         public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 
         public string? ImageUrl { get; set; }
+
+        public string? ImageUrlSmall { get; set; }
 
         public DateTime HoraDaConsulta { get; set; } = DateTime.Now;
     }
