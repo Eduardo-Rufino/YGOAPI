@@ -91,9 +91,8 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
 
         _context.SaveChanges();
 
-        List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto)).ToList();
+        List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto, cardCollection.Id)).ToList();
 
-        cardsToInsert.ForEach(x => x.CollectionId = cardCollection.Id);
         _context.Cards.AddRange(cardsToInsert);
 
         _context.GaleraCollections.Add(new GaleraCollection()

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Card;
+using YGOApi.Data.Enums;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;
@@ -70,8 +71,8 @@ public class CardController : ControllerBase
                 Defense = x.card.Defense,
                 Archetype = x.card.Archetype,
                 Effect = x.card.Effect,
-                Collection = x.card.Collection,
-                BanStatus = x.card.BanStatus,
+                CollectionId = x.card.CollectionId,
+                BanStatus = CardBanStatus.UNLIMITED,
                 Id = x.card.Id,
                 ImageUrl = x.card.ImageUrl,
                 ImageUrlSmall = x.card.ImageUrlSmall,

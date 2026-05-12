@@ -11,9 +11,11 @@ public class GaleraCollection
     public int GaleraId { get; set; }
     public int CardCollectionId { get; set;}
 
+    #region Foreign Keys
     [ForeignKey(nameof(GaleraId))]
     public virtual Galera Galera { get; set; }
 
     [ForeignKey(nameof(CardCollectionId))]
     public virtual CardCollection CardCollection { get; set; }
+    #endregion
 }
