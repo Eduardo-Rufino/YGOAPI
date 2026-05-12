@@ -10,7 +10,7 @@ public class Card
     [Required]
     public int Id { get; set; }
 
-    public int? CollectionId { get; set; }
+    public int CollectionId { get; set; }
 
     [Required(ErrorMessage ="O Nome é obrigatório")]
     [MaxLength(60, ErrorMessage = "O tamanho máximo Nome não pode exceder 60 caracteres")]
@@ -36,9 +36,6 @@ public class Card
         
     public int? Defense { get; set; }
 
-    // TODO: Remover propriedade
-    public string? Collection { get; set; }
-
     public string? Archetype { get; set; }
 
     public int? PendulumScale { get; set; }
@@ -55,9 +52,6 @@ public class Card
     public CardRarity Rarity { get; set; }
 
     public int Quantity { get; set; } = 1;
-
-    //TODO: Remover isso (usar tabela banlist)
-    public CardBanStatus BanStatus { get; set; } = CardBanStatus.UNLIMITED;
 
     [ForeignKey(nameof(CollectionId))]
     public virtual CardCollection CardCollection { get; set; }

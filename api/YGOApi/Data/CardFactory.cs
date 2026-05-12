@@ -6,7 +6,7 @@ namespace YGOApi.Data;
 
 public class CardFactory
 {
-    public static Card CreateCardFromYgoProDeckDto(YgoProDeckCardDto dto)
+    public static Card CreateCardFromYgoProDeckDto(YgoProDeckCardDto dto, int collectionId)
     {
         return new Card
         {
@@ -20,7 +20,7 @@ public class CardFactory
             Attribute = Enum.TryParse<CardAtribute>(dto.Attribute, true, out var attribute) ? attribute : null,
             Level = dto.Level,
             Race = dto.Type.Contains("monster", StringComparison.CurrentCultureIgnoreCase) ? MapDtoRaceToCardRace(dto.Race) : null,
-            Collection = dto.CardSet ?? string.Empty,
+            CollectionId = collectionId,
             PendulumScale = dto.Scale,
             LinkRating = dto.LinkVal,
             LinkMarkers = dto.LinkMarkers != null ? string.Join(",", dto.LinkMarkers) : null,
