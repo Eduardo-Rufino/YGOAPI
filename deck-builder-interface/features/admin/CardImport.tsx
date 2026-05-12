@@ -8,6 +8,7 @@ import styles from './CardImport.module.css';
 
 export const CardImport: React.FC = () => {
   const [setName, setSetName] = useState('');
+  const [galeraId, setGaleraId] = useState<number | ''>('');
   const [cards, setCards] = useState<YgoProDeckCardDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -54,13 +55,18 @@ export const CardImport: React.FC = () => {
 
   const handleConfirm = async () => {
     if (cards.length === 0) return;
+    if (galeraId === '') {
+      showNotification('Por favor, informe o ID da Galera.', 'error');
+      return;
+    }
 
     setIsImporting(true);
     try {
-      await adminService.confirmImport(cards);
+      await adminService.confirmImport(Number(galeraId), cards);
       showNotification(`${cards.length} cartas importadas com sucesso!`, 'success');
       setCards([]);
       setSetName('');
+      setGaleraId('');
     } catch (error: any) {
       showNotification(error.message || 'Erro ao importar cartas.', 'error');
     } finally {
@@ -89,6 +95,16 @@ export const CardImport: React.FC = () => {
       </header>
 
       <section className={styles.searchBox}>
+        <div className={styles.inputGroup}>
+          <label>ID da Galera</label>
+          <input 
+            type="number" 
+            className={styles.input}
+            placeholder="Ex: 1"
+            value={galeraId}
+            onChange={(e) => setGaleraId(e.target.value === '' ? '' : Number(e.target.value))}
+          />
+        </div>
         <div className={styles.inputGroup}>
           <label>Nome da Coleção (YgoProDeck)</label>
           <input 

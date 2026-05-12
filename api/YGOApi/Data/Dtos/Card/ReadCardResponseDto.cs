@@ -39,6 +39,8 @@ namespace YGOApi.Data.Dtos.Card
 
         public string? ImageUrl { get; set; }
 
+        public string? ImageUrlSmall { get; set; }
+
         public int Passcode { get; set; }
 
         public bool HasCard { get; set; }

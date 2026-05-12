@@ -229,3 +229,51 @@
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .saveButton, .importButton {
+    width: 100%;
+  }
+
+  .searchRow {
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1rem;
+  }
+
+  .controls {
+    padding: 4px 8px;
+    gap: 8px;
+  }
+
+  .controlBtn {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+  }
+
+  .quantity {
+    font-size: 0.9rem;
+  }
+}

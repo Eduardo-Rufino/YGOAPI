@@ -108,6 +108,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   const [filterAttribute, setFilterAttribute] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
   const [filterSubType, setFilterSubType] = useState<string>('');
+  const [filterRace, setFilterRace] = useState<string>('');
   const [minLevel, setMinLevel] = useState('');
   const [maxLevel, setMaxLevel] = useState('');
   const [filterScale, setFilterScale] = useState('');
@@ -194,9 +195,10 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
       // Attribute (numeric in API)
       if (filterAttribute && (card.attribute?.toString() ?? '') !== filterAttribute) return false;
       
-      // Type & SubType
+      // Type & SubType & Race
       if (filterType && (card.type?.toString() ?? '') !== filterType) return false;
       if (filterSubType && (card.subType?.toString() ?? '') !== filterSubType) return false;
+      if (filterRace && (card.race?.toString() ?? '') !== filterRace) return false;
       
       // Level Range
       if (minLevel && card.level < parseInt(minLevel)) return false;
@@ -230,7 +232,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   }, [
     availableCards, playerCollection, showFullDatabase, searchName, selectedCollection, 
     minAtk, maxAtk, minDef, maxDef, filterAttribute, 
-    filterType, filterSubType, minLevel, maxLevel, 
+    filterType, filterSubType, filterRace, minLevel, maxLevel, 
     filterScale, filterBanStatus, filterLinkRating, filterLinkMarkers
   ]);
 
@@ -242,7 +244,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
 
   const clearFilters = () => {
     setMinAtk(''); setMaxAtk(''); setMinDef(''); setMaxDef('');
-    setFilterAttribute(''); setFilterType(''); setFilterSubType('');
+    setFilterAttribute(''); setFilterType(''); setFilterSubType(''); setFilterRace('');
     setMinLevel(''); setMaxLevel(''); setFilterScale('');
     setFilterBanStatus(''); setFilterLinkRating(''); setFilterLinkMarkers([]);
   };
@@ -617,6 +619,38 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
               </div>
 
               <div className={styles.filterGroup}>
+                <label>Raça</label>
+                <select value={filterRace} onChange={e => setFilterRace(e.target.value)} className={styles.selectInput}>
+                  <option value="">Todas</option>
+                  <option value="0">Aqua</option>
+                  <option value="1">Besta</option>
+                  <option value="2">Besta-Guerreira</option>
+                  <option value="3">Ciberso</option>
+                  <option value="4">Dinossauro</option>
+                  <option value="5">Besta Divina</option>
+                  <option value="6">Dragão</option>
+                  <option value="7">Fada</option>
+                  <option value="8">Demônio</option>
+                  <option value="9">Peixe</option>
+                  <option value="10">Inseto</option>
+                  <option value="11">Ilusão</option>
+                  <option value="12">Máquina</option>
+                  <option value="13">Planta</option>
+                  <option value="14">Psíquico</option>
+                  <option value="15">Piro</option>
+                  <option value="16">Réptil</option>
+                  <option value="17">Rocha</option>
+                  <option value="18">Serpente Marinha</option>
+                  <option value="19">Mago</option>
+                  <option value="20">Trovão</option>
+                  <option value="21">Guerreiro</option>
+                  <option value="22">Besta Alada</option>
+                  <option value="23">Wyrm</option>
+                  <option value="24">Zumbi</option>
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
                 <label>BanList</label>
                 <select value={filterBanStatus} onChange={e => setFilterBanStatus(e.target.value)} className={styles.selectInput}>
                   <option value="">Qualquer</option>
@@ -728,7 +762,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                     onClick={() => removeFromMain(idx)}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
-                    <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
+                    <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
                   </div>
                 ))}
               </div>
@@ -751,7 +785,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                     onClick={() => removeFromExtra(idx)}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
-                    <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
+                    <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
                   </div>
                 ))}
               </div>
@@ -787,7 +821,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                       x{remaining}
                     </div>
                   )}
-                  <img src={card.imageUrl} alt={card.name} className={styles.cardImage} />
+                  <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
                   <div className={styles.cardInfoBox}>
                     <span className={styles.cardName}>{card.name}</span>
                     <div className={styles.cardStats}>
