@@ -19,10 +19,10 @@ public class Match
     [ForeignKey(nameof(ContestId))]
     public virtual Contest Contest { get; set; }
 
-    [ForeignKey(nameof(Player1))]
+    [ForeignKey(nameof(Player1Id))]
     public virtual User Player1 { get; set; }
 
-    [ForeignKey(nameof(Player2))]
+    [ForeignKey(nameof(Player2Id))]
     public virtual User Player2 { get; set; }
     #endregion
 }

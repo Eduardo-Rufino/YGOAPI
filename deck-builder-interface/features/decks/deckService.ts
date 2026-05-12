@@ -19,6 +19,7 @@ export interface Card {
   linkMarkers: string;
   banStatus: number;
   imageUrl: string;
+  imageUrlSmall: string;
   horaDaConsulta: string;
   passcode: number;
   id?: string; // Optional ID if not provided by API

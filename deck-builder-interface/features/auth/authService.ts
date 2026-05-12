@@ -10,31 +10,37 @@ const TOKEN_KEY = 'ygo_auth_token';
 const USERNAME_KEY = 'ygo_auth_username';
 const USER_ID_KEY = 'ygo_auth_user_id';
 
-/**
- * Decodes the JWT payload and extracts the 'sub' (NameIdentifier) claim,
- * which contains the numeric user ID. No extra API call needed.
- * Standard approach per RFC 7519.
- */
-function decodeJwtUserId(token: string): string | null {
+function decodeJwt(token: string): any | null {
   try {
     const payload = token.split('.')[1];
-    // JWT uses Base64URL, which might lack padding and use different characters
     const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
-    
-    const decoded = JSON.parse(atob(padded));
-    console.log('JWT Decoded Payload:', decoded);
-    
-    // Check 'nameid' first as seen in user's token, then fallbacks
-    return decoded['nameid']
-      ?? decoded['sub']
-      ?? decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
-      ?? decoded['unique_name']
-      ?? null;
+    return JSON.parse(atob(padded));
   } catch (error) {
     console.error('Failed to decode JWT:', error);
     return null;
   }
+}
+
+function isTokenExpired(token: string): boolean {
+  const decoded = decodeJwt(token);
+  if (!decoded || !decoded.exp) return true;
+  
+  // Current time in seconds (matching JWT exp format)
+  const now = Math.floor(Date.now() / 1000);
+  return decoded.exp < now;
+}
+
+function decodeJwtUserId(token: string): string | null {
+  const decoded = decodeJwt(token);
+  if (!decoded) return null;
+  
+  // Check 'nameid' first as seen in user's token, then fallbacks
+  return decoded['nameid']
+    ?? decoded['sub']
+    ?? decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+    ?? decoded['unique_name']
+    ?? null;
 }
 
 export const authService = {
@@ -108,7 +114,12 @@ export const authService = {
    */
   getToken: (): string | null => {
     if (isServer) return null;
-    return localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token && isTokenExpired(token)) {
+      authService.logout();
+      return null;
+    }
+    return token;
   },
 
   /**
@@ -134,7 +145,8 @@ export const authService = {
    */
   isAuthenticated: (): boolean => {
     if (isServer) return false;
-    return !!localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    return !!token && !isTokenExpired(token);
   },
 
   /**

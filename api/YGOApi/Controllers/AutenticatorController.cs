@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Autenticator;
 using YGOApi.Data;
@@ -55,5 +55,18 @@ public class AutenticatorController : ControllerBase
         _context.SaveChanges();
         return Ok();
     }
-}
 
+    [HttpGet("Search")]
+    public IActionResult SearchUsers([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return Ok(new List<object>());
+
+        var users = _context.Users
+            .Where(u => u.UserName.Contains(query))
+            .Take(10)
+            .Select(u => new { u.Id, Username = u.UserName })
+            .ToList();
+
+        return Ok(users);
+    }
+}
