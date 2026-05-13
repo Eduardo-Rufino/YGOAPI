@@ -1,7 +1,6 @@
-﻿
-using YGOApi.Models;
+﻿using YGOApi.Models;
 
-namespace YGOApi.Autenticator
+namespace YGOApi.Services.Autenticator
 {
     public interface IAutenticatorService
     {

@@ -6,11 +6,13 @@ using Microsoft.OpenApi;
 using Npgsql;
 using System.Reflection;
 using System.Text;
-using YGOApi.Autenticator;
 using YGOApi.Data;
 using YGOApi.Data.Enums;
 using YGOApi.Integrations;
 using YGOApi.Models;
+using YGOApi.Services.Autenticator;
+using YGOApi.Services.Gatcha;
+using YGOApi.Services.PlayerCollection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,10 @@ var connectionString = builder.Configuration.GetConnectionString("CardConnection
 builder.Services.AddScoped<ICardProvider, YgoProDeckAdapter>();
 
 builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
+
+builder.Services.AddScoped<IPlayerCollectionService, PlayerCollectionService>();
+
+builder.Services.AddScoped<IGatchaService, GatchaService>();
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<CardAtribute>();

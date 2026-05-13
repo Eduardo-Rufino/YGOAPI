@@ -1,9 +1,9 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using YGOApi.Autenticator;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Autentication;
 using YGOApi.Models;
+using YGOApi.Services.Autenticator;
 
 namespace YGOApi.Controllers;
 
