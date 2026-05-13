@@ -49,7 +49,7 @@ public class CardController : ControllerBase
         .GroupJoin(
         _context.PlayerCollections.Where(pc => pc.PlayerId == user.Id),
             card => card.Id,
-            pc => pc.Id,
+            pc => pc.CardId,
             (card, pcGroup) => new { card, pcGroup })
         .SelectMany(
             x => x.pcGroup.DefaultIfEmpty(),
