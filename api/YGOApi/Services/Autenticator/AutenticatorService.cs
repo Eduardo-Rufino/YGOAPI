@@ -6,7 +6,7 @@ using System.Text;
 using YGOApi.Data.Enums;
 using YGOApi.Models;
 
-namespace YGOApi.Autenticator
+namespace YGOApi.Services.Autenticator
 {
     public class AutenticatorService(IConfiguration configuration, IPasswordHasher<User> passwordHasher) : IAutenticatorService
     {

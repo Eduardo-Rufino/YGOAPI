@@ -26,7 +26,7 @@ namespace YGOApi.Data.Dtos.Card
         public int? Defense { get; set; }
 
         public int CollectionId { get; set; }
-
+        public string? Collection { get; set; }
         public string? Archetype { get; set; }
 
         public int? PendulumScale { get; set; }
@@ -44,6 +44,7 @@ namespace YGOApi.Data.Dtos.Card
         public int Passcode { get; set; }
 
         public bool HasCard { get; set; }
+        public int Quantity { get; set; }
 
         public DateTime HoraDaConsulta { get; set; } = DateTime.Now;
     }

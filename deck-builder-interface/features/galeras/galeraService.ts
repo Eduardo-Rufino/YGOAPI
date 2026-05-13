@@ -35,9 +35,9 @@ export const galeraService = {
     // Map to frontend interface if needed
     return data.map((m: any) => ({
       galeraId,
-      userId: m.userId,
-      username: m.username,
-      duelPoints: m.duelPoints
+      userId: m.userId || m.UserId,
+      username: m.username || m.Username,
+      duelPoints: m.duelPoints || m.DuelPoints
     }));
   },
 
@@ -94,9 +94,13 @@ export const galeraService = {
   },
 
   // Gerenciamento Local da Galera Ativa
-  setActiveGaleraId: (id: number) => {
+  setActiveGaleraId: (id: number | null) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ygo_active_galera_id', id.toString());
+      if (id === null) {
+        localStorage.removeItem('ygo_active_galera_id');
+      } else {
+        localStorage.setItem('ygo_active_galera_id', id.toString());
+      }
       window.dispatchEvent(new Event('active-galera-changed'));
     }
   },
@@ -107,5 +111,9 @@ export const galeraService = {
       return stored ? parseInt(stored, 10) : null;
     }
     return null;
+  },
+
+  hasActiveGalera: (): boolean => {
+    return galeraService.getActiveGaleraId() !== null;
   }
 };

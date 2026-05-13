@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/features/auth/authService';
 import { deckService, Card } from '@/features/decks/deckService';
 import { playerCollectionService, PlayerCard } from '@/features/decks/playerCollectionService';
+import { galeraService } from '@/features/galeras/galeraService';
 import styles from './CollectionManager.module.css';
 
 export const CollectionManager: React.FC = () => {
@@ -39,8 +40,9 @@ export const CollectionManager: React.FC = () => {
       }
       setIsLoading(true);
       try {
+        const activeGaleraId = galeraService.getActiveGaleraId();
         const [cards, colls, pCollection] = await Promise.all([
-          deckService.getAvailableCards(),
+          deckService.getAvailableCards(0, 10000, activeGaleraId),
           deckService.getCollections(),
           playerCollectionService.getCollection()
         ]);
@@ -131,11 +133,13 @@ export const CollectionManager: React.FC = () => {
 
   const filteredCards = useMemo(() => {
     return availableCards.filter(card => {
+      const quantity = localQuantities[Number(card.id)] || 0;
+      if (quantity === 0) return false;
       if (searchName && !card.name.toLowerCase().includes(searchName.toLowerCase())) return false;
       if (selectedCollection && card.collection !== selectedCollection) return false;
       return true;
     });
-  }, [availableCards, searchName, selectedCollection]);
+  }, [availableCards, searchName, selectedCollection, localQuantities]);
 
   const hasChanges = useMemo(() => {
     // Check if any quantity in local state differs from the original collection
@@ -250,11 +254,7 @@ export const CollectionManager: React.FC = () => {
               <div className={styles.cardOverlay}>
                 <div className={styles.cardInfo}>
                   <div className={styles.cardName}>{card.name}</div>
-                  <div className={styles.controls}>
-                    <button className={styles.controlBtn} onClick={() => handleQuantityChange(cardIdNum, -1)}>-</button>
-                    <span className={styles.quantity}>{quantity}</span>
-                    <button className={styles.controlBtn} onClick={() => handleQuantityChange(cardIdNum, 1)}>+</button>
-                  </div>
+                  <div className={styles.cardEffect}>{card.effect}</div>
                 </div>
               </div>
             </div>
