@@ -37,24 +37,13 @@ public class CardController : ControllerBase
     /// </summary>
     /// <param name="skip">Quantidade de itens a pular (offset). Padrão = 0.</param>
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
-    /// <param name="userId">Parêmetro opcional que, se estiver preenchido, busca as cartas do user em questão.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50, int? userId = null)
+    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-        User? user = null;
-
-        if (userId == null)
-        {
-            user = _context.Users.FirstOrDefault(x => x.UserName == userName)
-                ?? throw new UnauthorizedAccessException("User not found");
-        }
-        else
-        {
-            user = _context.Users.FirstOrDefault(x => x.Id == userId)
-                ?? throw new UnauthorizedAccessException("User not found");
-        }
+        var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
+            ?? throw new UnauthorizedAccessException("User not found");
 
         var query = _context.Cards
         .GroupJoin(
@@ -71,7 +60,7 @@ public class CardController : ControllerBase
                 Defense = x.card.Defense,
                 Archetype = x.card.Archetype,
                 Effect = x.card.Effect,
-                CollectionId = x.card.CollectionId,
+                Collection = x.card.CardCollection.Name,
                 BanStatus = CardBanStatus.UNLIMITED,
                 Id = x.card.Id,
                 ImageUrl = x.card.ImageUrl,
