@@ -64,8 +64,14 @@ export const Navbar: React.FC = () => {
       galeraService.getMyGaleras().then(g => {
         setGaleras(g);
         const currentActive = galeraService.getActiveGaleraId();
-        if (!currentActive && g.length > 0) {
+        
+        // Se houver galeras e o ID atual não estiver na lista ou não existir, seleciona a primeira
+        const isValid = g.some(gal => gal.id === currentActive);
+        
+        if (g.length > 0 && (!currentActive || !isValid)) {
           galeraService.setActiveGaleraId(g[0].id);
+        } else if (g.length === 0) {
+          galeraService.setActiveGaleraId(null);
         } else {
           setActiveGaleraId(currentActive);
         }
@@ -77,7 +83,17 @@ export const Navbar: React.FC = () => {
   }, [isLoggedIn]);
 
   const handleGaleraSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    galeraService.setActiveGaleraId(Number(e.target.value));
+    const value = e.target.value;
+    if (value === 'new') {
+      router.push('/galeras/create');
+      return;
+    }
+    
+    if (value) {
+      galeraService.setActiveGaleraId(Number(value));
+      // Refresh current page to apply new Galera context
+      window.location.reload();
+    }
   };
 
   const handleLogout = () => {
@@ -95,16 +111,25 @@ export const Navbar: React.FC = () => {
         <Link href="/" className={styles.logo} onClick={closeMenu}>
           Yu-Gi-Oh! Da Galera 2.0
         </Link>
-        {isLoggedIn && galeras.length > 0 && (
+        {isLoggedIn && (
           <select 
             className={styles.galeraSelect} 
             value={activeGaleraId || ''} 
             onChange={handleGaleraSelect}
             title="Sua Galera Ativa"
           >
-            {galeras.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
+            {galeras.length > 0 ? (
+              <>
+                <optgroup label="Suas Galeras">
+                  {galeras.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </optgroup>
+                <option value="new">+ Nova Galera</option>
+              </>
+            ) : (
+              <option value="new">+ Criar sua primeira Galera</option>
+            )}
           </select>
         )}
       </div>
@@ -150,21 +175,17 @@ export const Navbar: React.FC = () => {
             Decks
           </Link>
         </li>
-        <li 
-          className={styles.navDropdownItem}
-          onMouseEnter={() => setIsDropdownOpen(true)}
-          onMouseLeave={() => setIsDropdownOpen(false)}
-        >
-          <span className={styles.navLink}>Galeras ▾</span>
-          <ul className={`${styles.dropdownMenu} ${isDropdownOpen ? styles.dropdownMenuShow : ''}`}>
-            <li>
-              <Link href="/galeras/create" onClick={closeMenu} className={styles.dropdownLink}>Criar Galera</Link>
-            </li>
-            <li>
-              <Link href="/galeras/manage" onClick={closeMenu} className={styles.dropdownLink}>Gerenciar Galera</Link>
-            </li>
-          </ul>
-        </li>
+        {isLoggedIn && activeGaleraId && (
+          <li>
+            <Link
+              href="/galeras/manage"
+              className={`${styles.navLink} ${isActive('/galeras/manage') ? styles.active : ''}`}
+              onClick={closeMenu}
+            >
+              Minha Galera
+            </Link>
+          </li>
+        )}
         <li>
           <Link
             href="/collection"

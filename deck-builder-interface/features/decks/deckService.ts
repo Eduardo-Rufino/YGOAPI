@@ -1,5 +1,6 @@
 import { authService } from '@/features/auth/authService';
 import { API_BASE_URL } from '@/features/config';
+import { galeraService } from '@/features/galeras/galeraService';
 
 
 export interface Card {
@@ -22,7 +23,9 @@ export interface Card {
   imageUrlSmall: string;
   horaDaConsulta: string;
   passcode: number;
-  id?: string; // Optional ID if not provided by API
+  id?: string;
+  quantity?: number;
+  hasCard?: boolean;
 }
 
 export interface Deck {
@@ -84,9 +87,12 @@ export const deckService = {
     }
   },
 
-  getAvailableCards: async (skip: number = 0, take: number = 10000): Promise<Card[]> => {
+  getAvailableCards: async (skip: number = 0, take: number = 10000, galeraId?: number | null): Promise<Card[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Card?skip=${skip}&take=${take}`, {
+      let url = `${API_BASE_URL}/Card?skip=${skip}&take=${take}`;
+      if (galeraId) url += `&galeraId=${galeraId}`;
+
+      const response = await fetch(url, {
         headers: {
           ...authService.getAuthHeaders(),
         }
@@ -104,16 +110,30 @@ export const deckService = {
 
   getCollections: async (): Promise<string[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=500`, {
+      const galeraId = galeraService.getActiveGaleraId();
+      
+      // Se houver uma galera ativa, buscamos as coleções vinculadas a ela
+      if (galeraId) {
+        const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/Collections`, {
+          headers: {
+            ...authService.getAuthHeaders(),
+          }
+        });
+        if (response.ok) return await response.json();
+      }
+
+      // Fallback para o comportamento antigo (baseado em cards) caso não haja galera ou o endpoint falhe
+      const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=1000`, {
         headers: {
           ...authService.getAuthHeaders(),
         }
       });
       if (!response.ok) return [];
-      const data: Card[] = await response.json();
+      const data: any[] = await response.json();
       const collections = Array.from(new Set(data.map(c => c.collection).filter(Boolean)));
       return collections.sort();
     } catch (error) {
+      console.error('Failed to fetch collections', error);
       return [];
     }
   },

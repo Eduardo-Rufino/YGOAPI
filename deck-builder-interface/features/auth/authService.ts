@@ -157,6 +157,7 @@ export const authService = {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USERNAME_KEY);
     localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem('ygo_active_galera_id');
     window.dispatchEvent(new Event('auth-change'));
   },
 

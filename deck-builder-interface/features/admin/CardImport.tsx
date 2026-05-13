@@ -4,11 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { adminService, YgoProDeckCardDto } from './adminService';
 import { authService } from '../auth/authService';
 import { useRouter } from 'next/navigation';
+import { galeraService } from '@/features/galeras/galeraService';
 import styles from './CardImport.module.css';
 
 export const CardImport: React.FC = () => {
   const [setName, setSetName] = useState('');
-  const [galeraId, setGaleraId] = useState<number | ''>('');
+  const [activeGaleraId, setActiveGaleraId] = useState<number | null>(null);
   const [cards, setCards] = useState<YgoProDeckCardDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -18,16 +19,22 @@ export const CardImport: React.FC = () => {
 
   useEffect(() => {
     const user = authService.getUser();
-    // Simplified check: usually we'd check a specific claim, 
-    // but here we check if user exists and has a nameid/id
     if (!user) {
       router.push('/');
       return;
     }
-    // In a real scenario, we'd check a 'Role' claim. 
-    // For now, let's assume the user is authorized if they reach this protected route,
-    // but the API will enforce the 'Admin' policy anyway.
     setIsAdmin(true);
+
+    // Get active galera from service
+    const currentGaleraId = galeraService.getActiveGaleraId();
+    setActiveGaleraId(currentGaleraId);
+
+    // Listen for changes
+    const handleGaleraChange = () => {
+      setActiveGaleraId(galeraService.getActiveGaleraId());
+    };
+    window.addEventListener('active-galera-changed', handleGaleraChange);
+    return () => window.removeEventListener('active-galera-changed', handleGaleraChange);
   }, [router]);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -55,18 +62,17 @@ export const CardImport: React.FC = () => {
 
   const handleConfirm = async () => {
     if (cards.length === 0) return;
-    if (galeraId === '') {
-      showNotification('Por favor, informe o ID da Galera.', 'error');
+    if (!activeGaleraId) {
+      showNotification('Por favor, selecione uma Galera na Navbar primeiro.', 'error');
       return;
     }
 
     setIsImporting(true);
     try {
-      await adminService.confirmImport(Number(galeraId), cards);
+      await adminService.confirmImport(activeGaleraId, cards);
       showNotification(`${cards.length} cartas importadas com sucesso!`, 'success');
       setCards([]);
       setSetName('');
-      setGaleraId('');
     } catch (error: any) {
       showNotification(error.message || 'Erro ao importar cartas.', 'error');
     } finally {
@@ -95,16 +101,6 @@ export const CardImport: React.FC = () => {
       </header>
 
       <section className={styles.searchBox}>
-        <div className={styles.inputGroup}>
-          <label>ID da Galera</label>
-          <input 
-            type="number" 
-            className={styles.input}
-            placeholder="Ex: 1"
-            value={galeraId}
-            onChange={(e) => setGaleraId(e.target.value === '' ? '' : Number(e.target.value))}
-          />
-        </div>
         <div className={styles.inputGroup}>
           <label>Nome da Coleção (YgoProDeck)</label>
           <input 
