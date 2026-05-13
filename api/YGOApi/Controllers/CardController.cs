@@ -39,15 +39,15 @@ public class CardController : ControllerBase
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] int? userId = null)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
         var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
             ?? throw new UnauthorizedAccessException("User not found");
-
+        int playerId = userId ?? user.Id;
         var query = _context.Cards
         .GroupJoin(
-        _context.PlayerCollections.Where(pc => pc.PlayerId == user.Id),
+        _context.PlayerCollections.Where(pc => pc.PlayerId == playerId),
             card => card.Id,
             pc => pc.CardId,
             (card, pcGroup) => new { card, pcGroup })
