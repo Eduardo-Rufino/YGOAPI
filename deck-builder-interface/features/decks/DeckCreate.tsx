@@ -126,12 +126,14 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
       setIsLoading(true);
       try {
         const activeGaleraId = galeraService.getActiveGaleraId();
-        const [cards, colls] = await Promise.all([
+        const [cards, colls, pCollection] = await Promise.all([
           deckService.getAvailableCards(0, 10000, activeGaleraId),
-          deckService.getCollections()
+          deckService.getCollections(),
+          playerCollectionService.getCollection()
         ]);
         setAvailableCards(cards);
         setCollections(colls);
+        setPlayerCollection(pCollection);
 
         if (initialDeckId) {
           // Fetch deck details
@@ -250,9 +252,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   };
 
   const addCardToDeck = (card: Card) => {
-    // 1. Get owned quantity from personal collection
-    const ownedEntry = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString());
-    const ownedQuantity = ownedEntry ? ownedEntry.quantity : 0;
+    const ownedQuantity = card.quantity || 0;
 
     // 2. Check current count in deck (Main + Extra)
     const countInMain = mainDeck.filter(c => c.name === card.name).length;

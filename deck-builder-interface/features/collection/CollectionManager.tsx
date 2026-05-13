@@ -10,7 +10,7 @@ import styles from './CollectionManager.module.css';
 
 export const CollectionManager: React.FC = () => {
   const router = useRouter();
-  
+
   // Data State
   const [availableCards, setAvailableCards] = useState<Card[]>([]);
   const [playerCollection, setPlayerCollection] = useState<PlayerCard[]>([]);
@@ -18,13 +18,13 @@ export const CollectionManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   // Filter State
   const [searchName, setSearchName] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [collections, setCollections] = useState<string[]>([]);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -46,7 +46,7 @@ export const CollectionManager: React.FC = () => {
           deckService.getCollections(),
           playerCollectionService.getCollection()
         ]);
-        
+
         setAvailableCards(cards);
         setCollections(colls);
         setPlayerCollection(pCollection);
@@ -107,7 +107,7 @@ export const CollectionManager: React.FC = () => {
         await playerCollectionService.addCards(toAdd);
         const updatedColl = await playerCollectionService.getCollection();
         setPlayerCollection(updatedColl);
-        
+
         const quantities: Record<number, number> = {};
         updatedColl.forEach(pc => {
           quantities[pc.cardId] = pc.quantity;
@@ -134,10 +134,15 @@ export const CollectionManager: React.FC = () => {
   const filteredCards = useMemo(() => {
     return availableCards.filter(card => {
       const quantity = localQuantities[Number(card.id)] || 0;
-      if (quantity === 0) return false;
-      if (searchName && !card.name.toLowerCase().includes(searchName.toLowerCase())) return false;
-      if (selectedCollection && card.collection !== selectedCollection) return false;
-      return true;
+
+      const matchesSearch = !searchName || card.name.toLowerCase().includes(searchName.toLowerCase());
+      const matchesCollection = !selectedCollection || card.collection === selectedCollection;
+
+      if (searchName || selectedCollection) {
+        return matchesSearch && matchesCollection;
+      }
+
+      return quantity > 0;
     });
   }, [availableCards, searchName, selectedCollection, localQuantities]);
 
@@ -190,22 +195,22 @@ export const CollectionManager: React.FC = () => {
       <header className={styles.header}>
         <h1>Minha Coleção Pessoal</h1>
         <div className={styles.actions}>
-          <input 
-            type="file" 
-            accept=".ydk" 
-            hidden 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
+          <input
+            type="file"
+            accept=".ydk"
+            hidden
+            ref={fileInputRef}
+            onChange={handleFileUpload}
           />
-          <button 
-            className={`${styles.saveButton} ${styles.importButton}`} 
+          <button
+            className={`${styles.saveButton} ${styles.importButton}`}
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting || isLoading}
           >
             {isImporting ? 'Importando...' : 'Importar YDK'}
           </button>
-          <button 
-            className={styles.saveButton} 
+          <button
+            className={styles.saveButton}
             disabled={!hasChanges || isSaving}
             onClick={handleSave}
           >
@@ -216,14 +221,14 @@ export const CollectionManager: React.FC = () => {
 
       <section className={styles.filterSection}>
         <div className={styles.searchRow}>
-          <input 
-            type="text" 
-            placeholder="Pesquisar carta por nome..." 
+          <input
+            type="text"
+            placeholder="Pesquisar carta por nome..."
             className={styles.searchInput}
             value={searchName}
             onChange={(e) => setSearchName(e.target.value)}
           />
-          <select 
+          <select
             className={styles.searchInput}
             value={selectedCollection}
             onChange={(e) => setSelectedCollection(e.target.value)}
@@ -244,16 +249,33 @@ export const CollectionManager: React.FC = () => {
           const isModified = quantity !== original;
 
           return (
-            <div 
-              key={card.id} 
+            <div
+              key={card.id}
               className={`${styles.cardItem} ${isModified ? styles.hasChanges : ''}`}
             >
               {quantity > 0 && <div className={styles.ownedBadge}>x{quantity}</div>}
               <img src={card.imageUrl || '/CardBack.jpg'} alt={card.name} className={styles.cardImage} />
-              
+
               <div className={styles.cardOverlay}>
                 <div className={styles.cardInfo}>
                   <div className={styles.cardName}>{card.name}</div>
+
+                  <div className={styles.controls}>
+                    <button
+                      className={styles.controlBtn}
+                      onClick={() => handleQuantityChange(cardIdNum, -1)}
+                    >
+                      -
+                    </button>
+                    <span className={styles.quantity}>{quantity}</span>
+                    <button
+                      className={styles.controlBtn}
+                      onClick={() => handleQuantityChange(cardIdNum, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+
                   <div className={styles.cardEffect}>{card.effect}</div>
                 </div>
               </div>
