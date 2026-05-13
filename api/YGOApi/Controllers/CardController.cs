@@ -75,7 +75,8 @@ public class CardController : ControllerBase
                 Type = x.card.Type,
                 Passcode = x.card.Passcode,
                 HoraDaConsulta = DateTime.Now,
-                HasCard = pc != null
+                HasCard = pc != null,
+                Quantity = pc != null ? pc.Quantity : 0
             }
         ).Skip(skip).Take(take);
 
