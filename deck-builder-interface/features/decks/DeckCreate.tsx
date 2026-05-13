@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/features/auth/authService';
 import { deckService, Card } from './deckService';
 import { playerCollectionService, PlayerCard } from './playerCollectionService';
+import { galeraService } from '@/features/galeras/galeraService';
 import styles from './DeckCreate.module.css';
 
 /**
@@ -124,14 +125,13 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
       }
       setIsLoading(true);
       try {
-        const [cards, colls, pCollection] = await Promise.all([
-          deckService.getAvailableCards(),
-          deckService.getCollections(),
-          playerCollectionService.getCollection()
+        const activeGaleraId = galeraService.getActiveGaleraId();
+        const [cards, colls] = await Promise.all([
+          deckService.getAvailableCards(0, 10000, activeGaleraId),
+          deckService.getCollections()
         ]);
         setAvailableCards(cards);
         setCollections(colls);
-        setPlayerCollection(pCollection);
 
         if (initialDeckId) {
           // Fetch deck details
@@ -223,8 +223,8 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
 
       // Personal Collection Filter (Show all only if showFullDatabase is true)
       if (!showFullDatabase) {
-        const owned = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString());
-        if (!owned || owned.quantity <= 0) return false;
+        const isOwned = card.hasCard || (card.quantity && card.quantity > 0);
+        if (!isOwned) return false;
       }
 
       return true;
@@ -804,7 +804,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
               ))
             ) : (
               filteredCards.map((card, idx) => {
-                const ownedQuantity = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString())?.quantity || 0;
+                const ownedQuantity = card.quantity || 0;
                 const countInMain = mainDeck.filter(c => c.name === card.name).length;
                 const countInExtra = extraDeck.filter(c => c.name === card.name).length;
                 const remaining = ownedQuantity - countInMain - countInExtra;

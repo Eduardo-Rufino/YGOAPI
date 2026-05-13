@@ -153,6 +153,18 @@ public class GaleraController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{galeraId}/Collections")]
+    public IActionResult GetCollections(int galeraId)
+    {
+        var collections = _context.GaleraCollections
+            .Where(gc => gc.GaleraId == galeraId)
+            .Select(gc => gc.CardCollection.Name)
+            .Distinct()
+            .ToList();
+
+        return Ok(collections);
+    }
+
     private int GetCurrentUserId()
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;

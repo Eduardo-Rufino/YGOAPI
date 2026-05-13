@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.PlayerCollection;
 using YGOApi.Models;
+using YGOApi.Services.PlayerCollection;
 
 namespace YGOApi.Controllers;
 
@@ -24,15 +25,17 @@ public class PlayerCollectionController : ControllerBase
     /// </summary>
     private WriteContext _context;
     private IMapper _mapper;
+    private IPlayerCollectionService _collectionService;
 
     /// <summary>
     /// Inicializa uma nova instância de `PlayerCollectionController`.
     /// </summary>
     /// <param name="context">Instância de `CardContext` para acesso ao banco de dados.</param>
-    public PlayerCollectionController(WriteContext context, IMapper mapper)
+    public PlayerCollectionController(WriteContext context, IMapper mapper, IPlayerCollectionService collectionService)
     {
         _context = context;
         _mapper = mapper;
+        _collectionService = collectionService;
     }
 
     /// <summary>
@@ -52,50 +55,50 @@ public class PlayerCollectionController : ControllerBase
     /// - Se uma carta já existir na coleção do jogador, sua `Quantity` é incrementada pela quantidade informada.
     /// - Se não existir, uma nova entrada de `PlayerCollection` é criada.
     /// - As alterações são persistidas chamando `_context.SaveChanges()`.
-    /// </remarks>
+    /// </remarks>  
     [HttpPost("Add/{playerId}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     public IActionResult AddCards(int playerId, [FromBody]List<UpdatePlayerCollectionDto> newCards)
     {
-        var cardsToUpdate = _context.PlayerCollections
-            .Where(pc => pc.PlayerId == playerId && newCards.Select(c => c.CardId).Contains(pc.CardId))
-            .ToList();
+        //var cardsToUpdate = _context.PlayerCollections
+        //    .Where(pc => pc.PlayerId == playerId && newCards.Select(c => c.CardId).Contains(pc.CardId))
+        //    .ToList();
 
-        var cardsToAdd = newCards.Where(nc => !cardsToUpdate.Any(ctu => ctu.CardId == nc.CardId)).ToList();
+        //var cardsToAdd = newCards.Where(nc => !cardsToUpdate.Any(ctu => ctu.CardId == nc.CardId)).ToList();
         
-        int added = 0, updated = 0;
+        //int added = 0, updated = 0;
 
-        if (cardsToUpdate.Count > 0) 
-        {
-            List<UpdatePlayerCollectionDto> toUpdate = newCards.Where(c => cardsToUpdate.Any(ctu => ctu.CardId == c.CardId)).ToList();
-            foreach (var card in toUpdate) 
-            {
-                var cardToUpdate = cardsToUpdate.FirstOrDefault(c => c.CardId == card.CardId);
-                if (cardToUpdate != null) 
-                {
-                    cardToUpdate.Quantity += card.Quantity;
-                    updated++;
-                }
-            }
+        //if (cardsToUpdate.Count > 0) 
+        //{
+        //    List<UpdatePlayerCollectionDto> toUpdate = newCards.Where(c => cardsToUpdate.Any(ctu => ctu.CardId == c.CardId)).ToList();
+        //    foreach (var card in toUpdate) 
+        //    {
+        //        var cardToUpdate = cardsToUpdate.FirstOrDefault(c => c.CardId == card.CardId);
+        //        if (cardToUpdate != null) 
+        //        {
+        //            cardToUpdate.Quantity += card.Quantity;
+        //            updated++;
+        //        }
+        //    }
 
-            _context.PlayerCollections.UpdateRange(cardsToUpdate);
-        }
+        //    _context.PlayerCollections.UpdateRange(cardsToUpdate);
+        //}
 
-        if(cardsToAdd.Count > 0) 
-        {
-            var toAdd = cardsToAdd.Select(card => new PlayerCollection
-            {
-                PlayerId = playerId,
-                CardId = card.CardId,
-                Quantity = card.Quantity
-            }).ToList();
-            _context.PlayerCollections.AddRange(toAdd);
-            added += toAdd.Count;
-        }
+        //if(cardsToAdd.Count > 0) 
+        //{
+        //    var toAdd = cardsToAdd.Select(card => new PlayerCollection
+        //    {
+        //        PlayerId = playerId,
+        //        CardId = card.CardId,
+        //        Quantity = card.Quantity
+        //    }).ToList();
+        //    _context.PlayerCollections.AddRange(toAdd);
+        //    added += toAdd.Count;
+        //}
         
-        _context.SaveChanges();
+        //_context.SaveChanges();
 
-        return Ok(new { added, updated });
+        return Ok(_collectionService.AddCards(playerId, newCards));
     }
 
     /// <summary>
