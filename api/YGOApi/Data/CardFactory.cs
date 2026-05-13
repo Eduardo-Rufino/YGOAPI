@@ -6,7 +6,7 @@ namespace YGOApi.Data;
 
 public class CardFactory
 {
-    public static Card CreateCardFromYgoProDeckDto(YgoProDeckCardDto dto)
+    public static Card CreateCardFromYgoProDeckDto(YgoProDeckCardDto dto, int collectionId)
     {
         return new Card
         {
@@ -20,13 +20,28 @@ public class CardFactory
             Attribute = Enum.TryParse<CardAtribute>(dto.Attribute, true, out var attribute) ? attribute : null,
             Level = dto.Level,
             Race = dto.Type.Contains("monster", StringComparison.CurrentCultureIgnoreCase) ? MapDtoRaceToCardRace(dto.Race) : null,
-            Collection = dto.CardSet ?? string.Empty,
+            CollectionId = collectionId,
             PendulumScale = dto.Scale,
             LinkRating = dto.LinkVal,
             LinkMarkers = dto.LinkMarkers != null ? string.Join(",", dto.LinkMarkers) : null,
             ImageUrl = dto.CardImages[0].ImageUrl,
             ImageUrlSmall = dto.CardImages[0].ImagelUrlSmall,
             Passcode = dto.Id,
+            Rarity = dto.Rarity,
+            Quantity = SetInitialQuantity(dto.Rarity)
+        };
+    }
+
+    private static int SetInitialQuantity(CardRarity rarity)
+    {
+        return rarity switch
+        {
+            CardRarity.COMMON => 16,
+            CardRarity.RARE => 12,
+            CardRarity.SUPER_RARE => 8,
+            CardRarity.ULTRA_RARE => 6,
+            CardRarity.SECRET_RARE => 4,
+            _ => 4,
         };
     }
 
