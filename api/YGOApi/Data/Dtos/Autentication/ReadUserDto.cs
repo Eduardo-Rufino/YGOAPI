@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using YGOApi.Data.Enums;
 
 namespace YGOApi.Data.Dtos.Autentication
@@ -12,6 +12,7 @@ namespace YGOApi.Data.Dtos.Autentication
         public string UserName { get; set; }
 
         public UserRole Role { get; set; }
+
 
     }
 }

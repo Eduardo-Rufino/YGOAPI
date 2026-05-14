@@ -188,6 +188,16 @@ export const Navbar: React.FC = () => {
         )}
         <li>
           <Link
+            href="/gatcha"
+            className={`${styles.navLink} ${isActive('/gatcha') ? styles.active : ''}`}
+            style={{ color: '#ec4899' }} // Pink/Purple for Gatcha
+            onClick={closeMenu}
+          >
+            Abrir Boosters
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/collection"
             className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`}
             onClick={closeMenu}
