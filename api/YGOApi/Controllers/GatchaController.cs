@@ -9,6 +9,7 @@ using YGOApi.Data.Enums;
 using YGOApi.Models;
 using YGOApi.Services.Gatcha;
 using YGOApi.Services.PlayerCollection;
+using YGOApi.Data.Dtos.Card;
 
 namespace YGOApi.Controllers;
 
@@ -20,13 +21,15 @@ public class GatchaController : ControllerBase
     private WriteContext _context;
     private IPlayerCollectionService _playerCollectionService;
     private IGatchaService _gatchaService;
+    private IMapper _mapper;
     private static Random random = new Random();
 
-    public GatchaController(WriteContext context, IPlayerCollectionService playerCollectionService, IGatchaService gatchaService)
+    public GatchaController(WriteContext context, IPlayerCollectionService playerCollectionService, IGatchaService gatchaService, IMapper mapper)
     {
         _context = context;
         _playerCollectionService = playerCollectionService;
         _gatchaService = gatchaService;
+        _mapper = mapper;
     }
 
     [HttpGet("OpenBox/{collectionId}")]
@@ -55,11 +58,12 @@ public class GatchaController : ControllerBase
         // Persistir na coleção do jogador
         _playerCollectionService.AddCards(user.Id, sortedCards.Select(c => new UpdatePlayerCollectionDto { CardId = c.Id, Quantity = 1 }).ToList());
 
-        return Ok(sortedCards);
+        var resultDtos = _mapper.Map<List<ReadCardResponseDto>>(sortedCards);
+        return Ok(resultDtos);
     }
         
-    [HttpGet("OpenBooster/{collectionId}")]
-    public IActionResult OpenBooster(int collectionId)
+    [HttpGet("OpenBooster/{collectionId}/{galeraId}")]
+    public IActionResult OpenBooster(int collectionId, int galeraId)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
         User? user = _context.Users.FirstOrDefault(x => x.UserName == userName)
@@ -71,6 +75,24 @@ public class GatchaController : ControllerBase
             return BadRequest("A coleção citada não existe");
         }
 
+        // Buscar os pontos do usuário nesta galera específica
+        var userGalera = _context.UserGalera.FirstOrDefault(ug => ug.UserId == user.Id && ug.GaleraId == galeraId);
+        if (userGalera == null)
+        {
+            return BadRequest("O usuário não faz parte desta Galera.");
+        }
+
+        // Determinar o preço do booster
+        var latestCollections = _context.CardCollections.OrderByDescending(x => x.Id).Take(2).ToList();
+        int price = 1;
+        if (latestCollections.Count > 0 && latestCollections[0].Id == collectionId) price = 3;
+        else if (latestCollections.Count > 1 && latestCollections[1].Id == collectionId) price = 2;
+
+        if (userGalera.DuelPoints < price)
+        {
+            return BadRequest($"Você não possui pontos suficientes nesta Galera. Preço: {price}, Saldo: {userGalera.DuelPoints}");
+        }
+
         var cardsToSort = _context.Cards.Where(x => x.CollectionId == collectionId && x.Quantity > 0).ToList();
         
         if (cardsToSort.Count == 0)
@@ -78,13 +100,20 @@ public class GatchaController : ControllerBase
             return BadRequest("Esta coleção não possui mais cartas disponíveis no estoque.");
         }
 
+        // Deduzir os pontos da UserGalera
+        userGalera.DuelPoints -= price;
+        _context.UserGalera.Update(userGalera);
+
         // Para OpenBooster, usamos a quantidade do banco (estoque) e decrementamos o banco depois
         var sortedCards = SortCards(cardsToSort, 9, useCardQuantity: true);
 
         _playerCollectionService.AddCards(user.Id, sortedCards.Select(c => new UpdatePlayerCollectionDto { CardId = c.Id, Quantity = 1 }).ToList());
         _gatchaService.DecrementCardsStock(sortedCards.Select(c => c.Id).ToList());
 
-        return Ok(sortedCards);
+        _context.SaveChanges();
+
+        var resultDtos = _mapper.Map<List<ReadCardResponseDto>>(sortedCards);
+        return Ok(resultDtos);
     }
 
     private static List<Card> SortCards(List<Card> cards, int returnQuantity, bool useCardQuantity)
@@ -133,4 +162,4 @@ public class GatchaController : ControllerBase
             _ => 4,
         };
     }
-}
+}

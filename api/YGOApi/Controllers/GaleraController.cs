@@ -156,13 +156,36 @@ public class GaleraController : ControllerBase
     [HttpGet("{galeraId}/Collections")]
     public IActionResult GetCollections(int galeraId)
     {
+        var userId = GetCurrentUserId();
+        var userGalera = _context.UserGalera.FirstOrDefault(ug => ug.UserId == userId && ug.GaleraId == galeraId);
+        int userPoints = userGalera?.DuelPoints ?? 0;
+
+        var latestCollectionIds = _context.CardCollections.OrderByDescending(x => x.Id).Select(x => x.Id).Take(2).ToList();
+
         var collections = _context.GaleraCollections
             .Where(gc => gc.GaleraId == galeraId)
-            .Select(gc => gc.CardCollection.Name)
+            .Select(gc => new {
+                Id = gc.CardCollection.Id,
+                Name = gc.CardCollection.Name,
+                RemainingStock = _context.Cards.Where(c => c.CollectionId == gc.CardCollectionId).Sum(c => (int?)c.Quantity) ?? 0,
+                Price = latestCollectionIds.Count > 0 && latestCollectionIds[0] == gc.CardCollectionId ? 3 :
+                        latestCollectionIds.Count > 1 && latestCollectionIds[1] == gc.CardCollectionId ? 2 : 1,
+                CoverImageUrl = _context.Cards
+                    .Where(c => c.CollectionId == gc.CardCollectionId && c.Type == YGOApi.Data.Enums.CardType.MONSTER)
+                    .OrderByDescending(c => c.Attack)
+                    .Select(c => c.ImageUrl)
+                    .FirstOrDefault() ?? _context.Cards
+                        .Where(c => c.CollectionId == gc.CardCollectionId)
+                        .Select(c => c.ImageUrl)
+                        .FirstOrDefault()
+            })
             .Distinct()
             .ToList();
 
-        return Ok(collections);
+        return Ok(new {
+            UserPoints = userPoints,
+            Collections = collections
+        });
     }
 
     private int GetCurrentUserId()
