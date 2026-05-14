@@ -106,39 +106,4 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
 
         return NoContent();
     }
-
-    [HttpGet("UpdateRarity/{collectionName}")]
-    public async Task<IActionResult> UpdateRarityAndQuantity(string collectionName)
-    {
-        var providerCards = await _provider.ListCardByCollection(collectionName);
-
-        var dbCards = _context.Cards.Where(x => x.CardCollection.Name == collectionName).ToList();
-
-        dbCards.ForEach(dbCard =>
-        {
-            var providerCard = providerCards.Data.FirstOrDefault(x => x.Name == dbCard.Name);
-            if (providerCard != null)
-            {
-                dbCard.Rarity = providerCard.Rarity;
-                dbCard.Quantity = SetQuantity(providerCard.Rarity);
-            }
-        });
-        _context.UpdateRange(dbCards);
-        _context.SaveChanges();
-
-        return Ok();
-    }
-
-    private static int SetQuantity(CardRarity rarity)
-    {
-        return rarity switch
-        {
-            CardRarity.COMMON => 16,
-            CardRarity.RARE => 12,
-            CardRarity.SUPER_RARE => 8,
-            CardRarity.ULTRA_RARE => 6,
-            CardRarity.SECRET_RARE => 4,
-            _ => 4,
-        };
-    }
 }
