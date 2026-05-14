@@ -123,6 +123,8 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
                 dbCard.Quantity = SetQuantity(providerCard.Rarity);
             }
         });
+        _context.UpdateRange(dbCards);
+        _context.SaveChanges();
 
         return Ok();
     }
