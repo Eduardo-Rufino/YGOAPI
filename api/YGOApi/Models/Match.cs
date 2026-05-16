@@ -11,7 +11,7 @@ public class Match
     public int Id { get; set; }
     public int ContestId { get; set; }
     public int Player1Id { get; set; }
-    public int Player2Id { get; set; }
+    public int? Player2Id { get; set; }
     public int? WinnerId { get; set; }
     public ContestStage Stage { get; set; } = ContestStage.GROUP;
 

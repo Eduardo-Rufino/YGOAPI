@@ -14,9 +14,15 @@ public class Contest
 
     public int? BanlistId { get; set; }
 
+    public int? WinnerId { get; set; }
+
+    public bool IsFinished { get; set; } = false;
+
     public string Name { get; set; }
 
     public ContestType Type { get; set; }
+
+    public ContestStage? CurrentStage { get; set; } = null;
 
     #region Foreign Keys
     [ForeignKey(nameof(GaleraId))]
@@ -24,5 +30,8 @@ public class Contest
 
     [ForeignKey(nameof(BanlistId))]
     public virtual Banlist Banlist { get; set; }
+
+    [ForeignKey(nameof(WinnerId))]
+    public virtual User Winner { get; set; }
     #endregion
 }
