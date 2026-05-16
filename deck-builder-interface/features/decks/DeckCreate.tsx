@@ -126,12 +126,14 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
       setIsLoading(true);
       try {
         const activeGaleraId = galeraService.getActiveGaleraId();
-        const [cards, colls] = await Promise.all([
+        const [cards, colls, pCollection] = await Promise.all([
           deckService.getAvailableCards(0, 10000, activeGaleraId),
-          deckService.getCollections()
+          deckService.getCollections(),
+          playerCollectionService.getCollection()
         ]);
         setAvailableCards(cards);
         setCollections(colls);
+        setPlayerCollection(pCollection);
 
         if (initialDeckId) {
           // Fetch deck details
@@ -250,9 +252,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   };
 
   const addCardToDeck = (card: Card) => {
-    // 1. Get owned quantity from personal collection
-    const ownedEntry = playerCollection.find(pc => pc.cardId.toString() === card.id?.toString());
-    const ownedQuantity = ownedEntry ? ownedEntry.quantity : 0;
+    const ownedQuantity = card.quantity || 0;
 
     // 2. Check current count in deck (Main + Extra)
     const countInMain = mainDeck.filter(c => c.name === card.name).length;
@@ -598,13 +598,13 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                 <label>Atributo</label>
                 <select value={filterAttribute} onChange={e => setFilterAttribute(e.target.value)} className={styles.selectInput}>
                   <option value="">Todos</option>
+                  <option value="0">Trevas</option>
                   <option value="1">Luz</option>
-                  <option value="2">Trevas</option>
+                  <option value="2">Terra</option>
                   <option value="3">Água</option>
                   <option value="4">Fogo</option>
-                  <option value="5">Terra</option>
-                  <option value="6">Vento</option>
-                  <option value="7">Divino</option>
+                  <option value="5">Vento</option>
+                  <option value="6">Divino</option>
                 </select>
               </div>
 

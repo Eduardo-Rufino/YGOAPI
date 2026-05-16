@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.YgoProDeck;
+using YGOApi.Data.Enums;
 using YGOApi.Integrations;
 using YGOApi.Models;
 

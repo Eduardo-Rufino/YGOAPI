@@ -166,35 +166,49 @@ export const Navbar: React.FC = () => {
             </Link>
           </li>
         )}
-        <li>
-          <Link
-            href="/decks"
-            className={`${styles.navLink} ${isActive('/decks') && !isActive('/decks/create') ? styles.active : ''}`}
-            onClick={closeMenu}
-          >
-            Decks
-          </Link>
-        </li>
-        {isLoggedIn && activeGaleraId && (
-          <li>
-            <Link
-              href="/galeras/manage"
-              className={`${styles.navLink} ${isActive('/galeras/manage') ? styles.active : ''}`}
-              onClick={closeMenu}
-            >
-              Minha Galera
-            </Link>
-          </li>
+        {isLoggedIn && (
+          <>
+            <li>
+              <Link
+                href="/decks"
+                className={`${styles.navLink} ${isActive('/decks') && !isActive('/decks/create') ? styles.active : ''}`}
+                onClick={closeMenu}
+              >
+                Decks
+              </Link>
+            </li>
+            {activeGaleraId && (
+              <li>
+                <Link
+                  href="/galeras/manage"
+                  className={`${styles.navLink} ${isActive('/galeras/manage') ? styles.active : ''}`}
+                  onClick={closeMenu}
+                >
+                  Minha Galera
+                </Link>
+              </li>
+            )}
+            <li>
+              <Link
+                href="/gatcha"
+                className={`${styles.navLink} ${isActive('/gatcha') ? styles.active : ''}`}
+                style={{ color: '#ec4899' }} // Pink/Purple for Gatcha
+                onClick={closeMenu}
+              >
+                Abrir Boosters
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/collection"
+                className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`}
+                onClick={closeMenu}
+              >
+                Minha Coleção
+              </Link>
+            </li>
+          </>
         )}
-        <li>
-          <Link
-            href="/collection"
-            className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`}
-            onClick={closeMenu}
-          >
-            Minha Coleção
-          </Link>
-        </li>
 
         {isLoggedIn ? (
           <>

@@ -156,13 +156,68 @@ public class GaleraController : ControllerBase
     [HttpGet("{galeraId}/Collections")]
     public IActionResult GetCollections(int galeraId)
     {
+        var userId = GetCurrentUserId();
+        var userGalera = _context.UserGalera.FirstOrDefault(ug => ug.UserId == userId && ug.GaleraId == galeraId);
+        int userPoints = userGalera?.DuelPoints ?? 0;
+
+        var latestCollectionIds = _context.CardCollections.OrderByDescending(x => x.Id).Select(x => x.Id).Take(2).ToList();
+
         var collections = _context.GaleraCollections
             .Where(gc => gc.GaleraId == galeraId)
-            .Select(gc => gc.CardCollection.Name)
+            .Select(gc => new {
+                Id = gc.CardCollection.Id,
+                Name = gc.CardCollection.Name,
+                RemainingStock = _context.Cards.Where(c => c.CollectionId == gc.CardCollectionId).Sum(c => (int?)c.Quantity) ?? 0,
+                Price = latestCollectionIds.Count > 0 && latestCollectionIds[0] == gc.CardCollectionId ? 3 :
+                        latestCollectionIds.Count > 1 && latestCollectionIds[1] == gc.CardCollectionId ? 2 : 1,
+                CoverImageUrl = _context.Cards
+                    .Where(c => c.CollectionId == gc.CardCollectionId && c.Type == YGOApi.Data.Enums.CardType.MONSTER)
+                    .OrderByDescending(c => c.Attack)
+                    .Select(c => c.ImageUrl)
+                    .FirstOrDefault() ?? _context.Cards
+                        .Where(c => c.CollectionId == gc.CardCollectionId)
+                        .Select(c => c.ImageUrl)
+                        .FirstOrDefault()
+            })
             .Distinct()
             .ToList();
 
-        return Ok(collections);
+        return Ok(new {
+            UserPoints = userPoints,
+            Collections = collections
+        });
+    }
+
+    [HttpGet("{galeraId}/Collections/{collectionId}/Cards")]
+    public IActionResult GetCollectionCards(int galeraId, int collectionId)
+    {
+        var isInGalera = _context.UserGalera.Any(ug => ug.GaleraId == galeraId && ug.UserId == GetCurrentUserId());
+        if (!isInGalera) return Forbid();
+
+        var isCollectionInGalera = _context.GaleraCollections.Any(gc => gc.GaleraId == galeraId && gc.CardCollectionId == collectionId);
+        if (!isCollectionInGalera) return NotFound("Coleção não encontrada nesta galera.");
+
+        var cards = _context.Cards
+            .Where(c => c.CollectionId == collectionId)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.ImageUrl,
+                c.ImageUrlSmall,
+                c.Rarity,
+                c.Quantity,
+                c.Type,
+                c.Attribute,
+                c.Level,
+                c.Attack,
+                c.Defense
+            })
+            .OrderByDescending(c => c.Rarity)
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        return Ok(cards);
     }
 
     private int GetCurrentUserId()

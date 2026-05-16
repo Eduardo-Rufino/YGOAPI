@@ -23,6 +23,7 @@ export interface Card {
   imageUrlSmall: string;
   horaDaConsulta: string;
   passcode: number;
+  rarity: number;
   id?: string;
   quantity?: number;
   hasCard?: boolean;
@@ -37,11 +38,19 @@ export interface Deck {
   cardCount?: number; // Total number of cards
 }
 
+export interface CollectionInfo {
+  id: number;
+  name: string;
+  remainingStock: number;
+  price: number;
+  coverImageUrl?: string;
+}
+
 
 export const deckService = {
   getDecks: async (): Promise<Deck[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck`, { 
+      const response = await fetch(`${API_BASE_URL}/Deck`, {
         cache: 'no-store',
         headers: {
           ...authService.getAuthHeaders(),
@@ -57,7 +66,7 @@ export const deckService = {
 
   getDeckById: async (id: string): Promise<Deck | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { 
+      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, {
         cache: 'no-store',
         headers: {
           ...authService.getAuthHeaders(),
@@ -73,7 +82,7 @@ export const deckService = {
 
   getDeckCardsData: async (id: string): Promise<any[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, { 
+      const response = await fetch(`${API_BASE_URL}/Deck/${id}`, {
         cache: 'no-store',
         headers: {
           ...authService.getAuthHeaders(),
@@ -111,18 +120,29 @@ export const deckService = {
   getCollections: async (): Promise<string[]> => {
     try {
       const galeraId = galeraService.getActiveGaleraId();
-      
-      // Se houver uma galera ativa, buscamos as coleções vinculadas a ela
+
       if (galeraId) {
         const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/Collections`, {
           headers: {
             ...authService.getAuthHeaders(),
           }
         });
-        if (response.ok) return await response.json();
+        if (response.ok) {
+          const data = await response.json();
+          // The API might return camelCase or PascalCase depending on the exact ASP.NET configuration
+          const cols = data.collections || data.Collections || data;
+          
+          if (Array.isArray(cols) && cols.length > 0) {
+            if (typeof cols[0] === 'object') {
+              return cols.map((c: any) => c.name || c.Name).sort();
+            }
+            return cols.sort();
+          }
+          // If the array is empty (Galera has no specific collections), let it fall through
+          // to fetch all available collections in the system.
+        }
       }
 
-      // Fallback para o comportamento antigo (baseado em cards) caso não haja galera ou o endpoint falhe
       const response = await fetch(`${API_BASE_URL}/Card?skip=0&take=1000`, {
         headers: {
           ...authService.getAuthHeaders(),
@@ -134,6 +154,80 @@ export const deckService = {
       return collections.sort();
     } catch (error) {
       console.error('Failed to fetch collections', error);
+      return [];
+    }
+  },
+
+  getCollectionsInfo: async (): Promise<{ points: number; collections: CollectionInfo[] }> => {
+    try {
+      const galeraId = galeraService.getActiveGaleraId();
+      if (!galeraId) return { points: 0, collections: [] };
+
+      const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/Collections`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
+      if (!response.ok) return { points: 0, collections: [] };
+      const data = await response.json();
+      
+      const cols = data.collections || data.Collections || [];
+      const mappedCols = cols.map((c: any) => ({
+        id: c.id || c.Id,
+        name: c.name || c.Name,
+        remainingStock: c.remainingStock || c.RemainingStock || 0,
+        price: c.price || c.Price || 1,
+        coverImageUrl: c.coverImageUrl || c.CoverImageUrl
+      }));
+
+      return {
+        points: data.userPoints || data.UserPoints || 0,
+        collections: mappedCols
+      };
+    } catch (error) {
+      console.error('Failed to fetch collections info', error);
+      return { points: 0, collections: [] };
+    }
+  },
+
+  getCollectionCards: async (collectionId: number): Promise<Card[]> => {
+    try {
+      const galeraId = galeraService.getActiveGaleraId();
+      if (!galeraId) return [];
+
+      const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/Collections/${collectionId}/Cards`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
+      if (!response.ok) return [];
+      const data: any[] = await response.json();
+      return data.map(c => ({
+        id: c.id ?? c.Id,
+        name: c.name ?? c.Name,
+        imageUrl: c.imageUrl ?? c.ImageUrl,
+        imageUrlSmall: c.imageUrlSmall ?? c.ImageUrlSmall,
+        rarity: c.rarity ?? c.Rarity ?? 0,
+        quantity: c.quantity ?? c.Quantity ?? 0,
+        type: c.type ?? c.Type ?? 0,
+        attribute: c.attribute ?? c.Attribute ?? 0,
+        level: c.level ?? c.Level ?? 0,
+        attack: c.attack ?? c.Attack,
+        defense: c.defense ?? c.Defense,
+        collection: '',
+        archetype: '',
+        pendulumScale: 0,
+        linkRating: 0,
+        linkMarkers: '',
+        banStatus: 0,
+        effect: '',
+        race: 0,
+        subType: 0,
+        horaDaConsulta: '',
+        passcode: 0,
+      } as Card));
+    } catch (error) {
+      console.error('Failed to fetch collection cards', error);
       return [];
     }
   },
@@ -211,7 +305,7 @@ export const deckService = {
       if (!targetDeckId) {
         const allDecks = await deckService.getDecks();
         const existingDeck = allDecks.find(d => d.name === name);
-        
+
         if (existingDeck) {
           targetDeckId = existingDeck.id;
         }
@@ -225,9 +319,9 @@ export const deckService = {
         // Deck doesn't exist -> create new deck with cover, then add cards
         const newDeck = await deckService.createDeck(name, deckCover);
         // The API might return the deck object { id: '...', name: '...' } or just the ID. 
-        const newDeckId = newDeck.id || newDeck.deckId || newDeck; 
+        const newDeckId = newDeck.id || newDeck.deckId || newDeck;
         if (!newDeckId) throw new Error("Could not retrieve new deck ID");
-        
+
         await deckService.updateCardsOnDeck(newDeckId, cards);
       }
     } catch (error) {

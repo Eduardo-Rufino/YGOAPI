@@ -25,7 +25,7 @@ function decodeJwt(token: string): any | null {
 function isTokenExpired(token: string): boolean {
   const decoded = decodeJwt(token);
   if (!decoded || !decoded.exp) return true;
-  
+
   // Current time in seconds (matching JWT exp format)
   const now = Math.floor(Date.now() / 1000);
   return decoded.exp < now;
@@ -34,7 +34,7 @@ function isTokenExpired(token: string): boolean {
 function decodeJwtUserId(token: string): string | null {
   const decoded = decodeJwt(token);
   if (!decoded) return null;
-  
+
   // Check 'nameid' first as seen in user's token, then fallbacks
   return decoded['nameid']
     ?? decoded['sub']
@@ -181,7 +181,7 @@ export const authService = {
       const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
       const decoded = JSON.parse(atob(padded));
-      
+
       return {
         id: decoded['nameid'] || decoded['sub'],
         username: decoded['unique_name'],

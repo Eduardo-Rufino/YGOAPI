@@ -1,5 +1,7 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Autentication;
 using YGOApi.Models;
