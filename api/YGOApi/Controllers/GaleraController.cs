@@ -188,6 +188,38 @@ public class GaleraController : ControllerBase
         });
     }
 
+    [HttpGet("{galeraId}/Collections/{collectionId}/Cards")]
+    public IActionResult GetCollectionCards(int galeraId, int collectionId)
+    {
+        var isInGalera = _context.UserGalera.Any(ug => ug.GaleraId == galeraId && ug.UserId == GetCurrentUserId());
+        if (!isInGalera) return Forbid();
+
+        var isCollectionInGalera = _context.GaleraCollections.Any(gc => gc.GaleraId == galeraId && gc.CardCollectionId == collectionId);
+        if (!isCollectionInGalera) return NotFound("Coleção não encontrada nesta galera.");
+
+        var cards = _context.Cards
+            .Where(c => c.CollectionId == collectionId)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.ImageUrl,
+                c.ImageUrlSmall,
+                c.Rarity,
+                c.Quantity,
+                c.Type,
+                c.Attribute,
+                c.Level,
+                c.Attack,
+                c.Defense
+            })
+            .OrderByDescending(c => c.Rarity)
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        return Ok(cards);
+    }
+
     private int GetCurrentUserId()
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
