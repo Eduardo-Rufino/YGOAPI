@@ -114,6 +114,7 @@ export const GaleraSidebar: React.FC = () => {
   const [members, setMembers] = useState<UserGalera[]>([]);
   const [activeGaleraId, setActiveGaleraId] = useState<number | null>(null);
   const [selectedMember, setSelectedMember] = useState<UserGalera | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const fetchMembers = async (id: number) => {
     const data = await galeraService.getGaleraMembers(id);
@@ -136,27 +137,50 @@ export const GaleraSidebar: React.FC = () => {
     return () => window.removeEventListener('active-galera-changed', handleGaleraChange);
   }, []);
 
+  // Responsividade: fechar automaticamente em telas menores ao carregar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setIsOpen(false);
+      } else {
+        setIsOpen(true);
+      }
+    };
+    handleResize(); // Check initial size
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (!activeGaleraId) return null;
 
   return (
     <>
-      <aside className={styles.sidebar}>
-        <h3 className={styles.sidebarTitle}>Membros da Galera</h3>
-        <ul className={styles.memberList}>
-          {members.map(member => (
-            <li 
-              key={member.userId} 
-              className={styles.memberItem}
-              onClick={() => setSelectedMember(member)}
-            >
-              <span className={styles.memberStatus}></span>
-              {member.username}
-            </li>
-          ))}
-          {members.length === 0 && (
-            <li className={styles.emptyMembers}>Nenhum membro</li>
-          )}
-        </ul>
+      <aside className={`${styles.sidebar} ${!isOpen ? styles.collapsed : ''}`}>
+        <button 
+          className={styles.toggleBtn} 
+          onClick={() => setIsOpen(!isOpen)}
+          title={isOpen ? "Recolher Membros" : "Expandir Membros"}
+        >
+          {isOpen ? '◀' : '▶'}
+        </button>
+        <div className={styles.sidebarContent}>
+          <h3 className={styles.sidebarTitle}>Membros da Galera</h3>
+          <ul className={styles.memberList}>
+            {members.map(member => (
+              <li 
+                key={member.userId} 
+                className={styles.memberItem}
+                onClick={() => setSelectedMember(member)}
+              >
+                <span className={styles.memberStatus}></span>
+                {member.username}
+              </li>
+            ))}
+            {members.length === 0 && (
+              <li className={styles.emptyMembers}>Nenhum membro</li>
+            )}
+          </ul>
+        </div>
       </aside>
 
       {selectedMember && (

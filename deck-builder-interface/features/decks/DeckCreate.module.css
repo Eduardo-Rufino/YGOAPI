@@ -103,7 +103,9 @@
 /* Removed dark mode overrides for these boxes */
 
 .controlsBox {
-  width: 780px;
+  flex: 1;
+  max-width: 780px;
+  min-width: 400px;
   background: #24324D;
   padding: 1.5rem;
   border-radius: 24px;
@@ -112,7 +114,6 @@
   display: flex;
   flex-direction: column; /* Vertical layout */
   gap: 1.25rem;
-  flex-shrink: 0;
 }
 
 .actionButtons {
@@ -242,7 +243,8 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 1rem;
-  width: 400px; /* Increased width */
+  width: 100%;
+  max-width: 400px;
   color: #F1F5F9;
   background-color: rgba(30, 41, 59, 0.5);
   transition: all 0.3s;
@@ -558,7 +560,9 @@
 }
 
 .deckSection {
-  width: 780px; /* Reduced from 820px */
+  flex: 1;
+  max-width: 780px;
+  min-width: 400px;
   background: rgba(36, 50, 77, 0.7); /* Deep Blue with opacity */
   backdrop-filter: blur(8px);
   border-radius: 24px;
@@ -567,7 +571,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  flex-shrink: 0;
   height: 82vh; /* Use viewport height to fit everything in one screen */
   min-height: 700px;
 }
@@ -805,4 +808,99 @@
 
 .ownedBadgeZero {
   background: #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .topBar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .topBarSpacer {
+    display: none;
+  }
+  .mainLayout {
+    flex-wrap: wrap;
+  }
+  .deckSection {
+    width: 100%;
+    flex: 1;
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topBar, .mainLayout {
+    display: contents;
+  }
+  .controlsBox { order: 1; width: 100%; min-width: 0; }
+  .detailsSection { order: 2; width: 100%; max-width: 100%; position: static; }
+  .deckSection { order: 3; width: 100%; min-width: 0; height: auto; min-height: 500px; }
+  .filtersBox { order: 4; width: 100%; max-width: none; }
+  .databaseSection { order: 5; width: 100%; max-width: none; }
+
+  .deckNameInput {
+    width: 100%;
+  }
+  .databaseGrid {
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: auto;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  .topRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .actionButtons {
+    justify-content: center;
+    width: 100%;
+  }
+  .btnExit {
+    margin-left: 0;
+  }
+  .filterRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .advancedFiltersPanel {
+    grid-template-columns: 1fr;
+    position: static;
+    width: 100%;
+  }
+  .filterMarkersGroup {
+    grid-column: span 1;
+  }
+  .markersGrid {
+    justify-content: center;
+  }
+  .btnClearFilters {
+    grid-column: span 1;
+  }
+  .detailsImage {
+    width: 200px;
+    height: 290px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .extraDeckGrid {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.5rem;
+  }
+  .actionButtons button {
+    width: 100%;
+  }
 }

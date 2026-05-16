@@ -190,6 +190,48 @@ export const deckService = {
     }
   },
 
+  getCollectionCards: async (collectionId: number): Promise<Card[]> => {
+    try {
+      const galeraId = galeraService.getActiveGaleraId();
+      if (!galeraId) return [];
+
+      const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/Collections/${collectionId}/Cards`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
+      if (!response.ok) return [];
+      const data: any[] = await response.json();
+      return data.map(c => ({
+        id: c.id ?? c.Id,
+        name: c.name ?? c.Name,
+        imageUrl: c.imageUrl ?? c.ImageUrl,
+        imageUrlSmall: c.imageUrlSmall ?? c.ImageUrlSmall,
+        rarity: c.rarity ?? c.Rarity ?? 0,
+        quantity: c.quantity ?? c.Quantity ?? 0,
+        type: c.type ?? c.Type ?? 0,
+        attribute: c.attribute ?? c.Attribute ?? 0,
+        level: c.level ?? c.Level ?? 0,
+        attack: c.attack ?? c.Attack,
+        defense: c.defense ?? c.Defense,
+        collection: '',
+        archetype: '',
+        pendulumScale: 0,
+        linkRating: 0,
+        linkMarkers: '',
+        banStatus: 0,
+        effect: '',
+        race: 0,
+        subType: 0,
+        horaDaConsulta: '',
+        passcode: 0,
+      } as Card));
+    } catch (error) {
+      console.error('Failed to fetch collection cards', error);
+      return [];
+    }
+  },
+
   createDeck: async (name: string, deckCover?: string | null): Promise<any> => {
     const response = await fetch(`${API_BASE_URL}/Deck`, {
       method: 'POST',
