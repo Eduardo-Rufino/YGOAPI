@@ -157,3 +157,118 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* ── Competições ── */
+.contestSection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.contestList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contestCard {
+  border: 1px solid rgba(138, 43, 226, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.contestHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: rgba(138, 43, 226, 0.1);
+  border: none;
+  cursor: pointer;
+  color: #F8FAFC;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.contestHeader:hover {
+  background: rgba(138, 43, 226, 0.2);
+}
+
+.contestHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.contestName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #E2E8F0;
+}
+
+.contestBadges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(138, 43, 226, 0.2);
+  color: #C084FC;
+  border: 1px solid rgba(138, 43, 226, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.contestChevron {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.contestBody {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.winnerSelect {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(138, 43, 226, 0.4);
+  color: #F8FAFC;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.winnerSelect:focus {
+  border-color: #8A2BE2;
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+}
+
+.winnerSelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.emptyState {
+  color: #94A3B8;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
