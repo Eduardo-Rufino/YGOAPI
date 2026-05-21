@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
@@ -133,7 +133,7 @@ public class ContestController : ControllerBase
 
     [HttpPost("Tournment/{tournmentId}/AdvancePhase")]
     [Authorize("Admin")]
-    public IActionResult AddContest(int tournmentId)
+    public IActionResult AdvancePhase(int tournmentId)
     {
         Contest? contest = _context.Contests.FirstOrDefault(x => x.Id == tournmentId && x.Type == ContestType.TOURNAMENT);
         if (contest == null)
@@ -172,7 +172,7 @@ public class ContestController : ControllerBase
         contest.WinnerId = winnerId;
         contest.IsFinished = true;
 
-        _context.Contests.Add(contest);
+        _context.Contests.Update(contest);
         _context.SaveChanges();
 
         return NoContent();
