@@ -36,6 +36,9 @@ export default function ManageGaleraPage() {
   const [winnerLoading, setWinnerLoading] = useState<number | null>(null);
   const [expandedPlayerId, setExpandedPlayerId] = useState<number | null>(null);
 
+  const [finishingContestId, setFinishingContestId] = useState<number | null>(null);
+  const [selectedWinnerId, setSelectedWinnerId] = useState<number | ''>('');
+
   // Create Contest state
   const [banlists, setBanlists] = useState<Banlist[]>([]);
   const [showCreateContest, setShowCreateContest] = useState(false);
@@ -196,6 +199,30 @@ export default function ManageGaleraPage() {
       await fetchContests(activeGaleraId);
     } catch (err: any) {
       setMessage({ text: err.message || 'Erro ao criar competição.', type: 'error' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleFinishContest = async (contestId: number) => {
+    if (!selectedWinnerId) {
+      setMessage({ text: 'Selecione um vencedor para encerrar a competição.', type: 'error' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await contestService.finishContest(contestId, Number(selectedWinnerId));
+      setMessage({ text: 'Competição encerrada com sucesso!', type: 'success' });
+      setFinishingContestId(null);
+      setSelectedWinnerId('');
+      if (activeGaleraId) await fetchContests(activeGaleraId);
+      if (expandedContestId === contestId) {
+        const detail = await contestService.getContestDetail(contestId);
+        setContestDetail(detail);
+      }
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Erro ao encerrar competição.', type: 'error' });
     } finally {
       setLoading(false);
       setTimeout(() => setMessage(null), 3000);
@@ -484,8 +511,38 @@ export default function ManageGaleraPage() {
                               <div className={styles.emptyState}>Nenhuma partida cadastrada.</div>
                             ) : (
                               <div className={styles.playerGroupsContainer}>
-                                {Array.from(new Set(contestDetail.matches.map(m => m.player1Id))).map(playerId => {
-                                  const playerMatches = contestDetail.matches.filter(m => m.player1Id === playerId);
+                                {!contestDetail.contest.isFinished && contestDetail.contest.type === 0 && isAdmin && (
+                                  <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(138, 43, 226, 0.3)' }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#ADEBB3' }}>Encerrar Competição</h4>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                      <div style={{ flex: 1, minWidth: '200px' }}>
+                                        <label style={{ fontSize: '0.85rem', color: '#E2E8F0', display: 'block', marginBottom: '0.25rem' }}>Selecione o Vencedor Final</label>
+                                        <select 
+                                          className={styles.selectInput} 
+                                          value={finishingContestId === contest.id ? selectedWinnerId : ''}
+                                          onChange={e => {
+                                            setFinishingContestId(contest.id);
+                                            setSelectedWinnerId(e.target.value ? Number(e.target.value) : '');
+                                          }}
+                                        >
+                                          <option value="">-- Selecionar --</option>
+                                          {members.map(m => (
+                                            <option key={m.userId} value={m.userId}>{m.username}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                      <button 
+                                        className={styles.btnDanger}
+                                        onClick={() => handleFinishContest(contest.id)}
+                                        disabled={loading || finishingContestId !== contest.id || selectedWinnerId === ''}
+                                      >
+                                        {loading && finishingContestId === contest.id ? 'Encerrando...' : 'Encerrar'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                                {Array.from(new Set(contestDetail.matches.flatMap(m => m.player2Id ? [m.player1Id, m.player2Id] : [m.player1Id]))).map(playerId => {
+                                  const playerMatches = contestDetail.matches.filter(m => m.player1Id === playerId || m.player2Id === playerId);
                                   const playerName = memberMap[playerId] ?? `#${playerId}`;
                                   const isExpandedPlayer = expandedPlayerId === playerId;
                                   
@@ -524,13 +581,15 @@ export default function ManageGaleraPage() {
                                               </thead>
                                               <tbody>
                                                 {playerMatches.map(match => {
-                                                  const p2Name = match.player2Id ? (memberMap[match.player2Id] ?? `#${match.player2Id}`) : '—';
+                                                  const isPlayer1 = match.player1Id === playerId;
+                                                  const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
+                                                  const opponentName = opponentId ? (memberMap[opponentId] ?? `#${opponentId}`) : '—';
                                                   const currentWinnerName = match.winnerId ? (memberMap[match.winnerId] ?? `#${match.winnerId}`) : null;
                                                   
                                                   return (
                                                     <tr key={match.id}>
                                                       <td className={styles.td}>{STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}</td>
-                                                      <td className={styles.td}>{p2Name}</td>
+                                                      <td className={styles.td}>{opponentName}</td>
                                                       <td className={styles.td}>
                                                         {contestDetail.contest.isFinished ? (
                                                           <span style={{ color: currentWinnerName ? '#10B981' : '#94A3B8', fontWeight: currentWinnerName ? 700 : 400 }}>
@@ -547,8 +606,8 @@ export default function ManageGaleraPage() {
                                                             }}
                                                           >
                                                             <option value="">{winnerLoading === match.id ? 'Salvando...' : '— Selecionar —'}</option>
-                                                            <option value={match.player1Id}>{playerName}</option>
-                                                            {match.player2Id && <option value={match.player2Id}>{p2Name}</option>}
+                                                            <option value={playerId}>{playerName}</option>
+                                                            {opponentId && <option value={opponentId}>{opponentName}</option>}
                                                           </select>
                                                         )}
                                                       </td>

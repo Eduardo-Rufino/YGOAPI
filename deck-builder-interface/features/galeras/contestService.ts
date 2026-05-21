@@ -94,4 +94,16 @@ export const contestService = {
     
     return await response.json();
   },
+
+  finishContest: async (contestId: number, winnerUserId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/Contest/${contestId}/Finish?winnerId=${winnerUserId}`, {
+      method: 'POST',
+      headers: authService.getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Falha ao encerrar competição.');
+    }
+  },
 };
