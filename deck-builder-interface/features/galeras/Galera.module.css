@@ -272,3 +272,93 @@
   border-radius: 8px;
   font-size: 0.95rem;
 }
+
+/* ── Contest Creation Form ── */
+.createContestForm {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.createContestHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selectInput {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  color: #F8FAFC;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.selectInput:focus {
+  border-color: #8A2BE2;
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+}
+
+.btnToggleForm {
+  background: rgba(138, 43, 226, 0.2);
+  color: #C084FC;
+  border: 1px solid rgba(138, 43, 226, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnToggleForm:hover {
+  background: rgba(138, 43, 226, 0.4);
+}
+
+/* ── Player Group ── */
+.playerGroup {
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.playerGroupHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  cursor: pointer;
+  color: #F8FAFC;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.playerGroupHeader:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.playerGroupName {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.playerGroupBody {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.2);
+}

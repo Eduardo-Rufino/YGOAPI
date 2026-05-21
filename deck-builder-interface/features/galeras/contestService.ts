@@ -27,6 +27,18 @@ export interface ContestDetail {
   matches: Match[];
 }
 
+export interface Banlist {
+  id: number;
+  name: string;
+}
+
+export interface CreateContestDto {
+  galeraId: number;
+  banlistId?: number | null;
+  name: string;
+  type: number;
+}
+
 export const contestService = {
   getByGaleraId: async (galeraId: number): Promise<Contest[]> => {
     const response = await fetch(`${API_BASE_URL}/Contest/GetByGaleraId/${galeraId}`, {
@@ -54,6 +66,44 @@ export const contestService = {
     );
     if (!response.ok) {
       throw new Error('Falha ao definir vencedor da partida.');
+    }
+  },
+
+  getBanlists: async (): Promise<Banlist[]> => {
+    const response = await fetch(`${API_BASE_URL}/Banlist`, {
+      headers: authService.getAuthHeaders(),
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  createContest: async (dto: CreateContestDto): Promise<Contest> => {
+    const response = await fetch(`${API_BASE_URL}/Contest`, {
+      method: 'POST',
+      headers: {
+        ...authService.getAuthHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dto),
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Falha ao criar competição.');
+    }
+    
+    return await response.json();
+  },
+
+  finishContest: async (contestId: number, winnerUserId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/Contest/${contestId}/Finish?winnerId=${winnerUserId}`, {
+      method: 'POST',
+      headers: authService.getAuthHeaders(),
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Falha ao encerrar competição.');
     }
   },
 };

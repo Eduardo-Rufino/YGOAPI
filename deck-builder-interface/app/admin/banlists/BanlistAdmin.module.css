@@ -1,0 +1,192 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #EF4444;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94A3B8;
+  font-size: 1rem;
+}
+
+.card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.btnDanger {
+  background: transparent;
+  color: #EF4444;
+  border: 1px solid #EF4444;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnDanger:hover {
+  background: #EF4444;
+  color: white;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputGroup label {
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F8FAFC;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.select {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F8FAFC;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.banlistName {
+  font-weight: 600;
+  color: #F8FAFC;
+  font-size: 1.1rem;
+}
+
+.cardSearchSection {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  margin-bottom: 1.5rem;
+}
+
+.addedCardsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.addedCardItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cardName {
+  flex: 1;
+  font-weight: 600;
+  color: #F8FAFC;
+}
+
+.statusBanned { color: #EF4444; font-weight: bold; }
+.statusLimited { color: #F59E0B; font-weight: bold; }
+.statusSemi { color: #10B981; font-weight: bold; }
+
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
