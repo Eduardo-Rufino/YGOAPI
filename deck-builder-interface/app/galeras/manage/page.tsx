@@ -495,6 +495,18 @@ export default function ManageGaleraPage() {
                               >
                                 {contest.isFinished ? '✅ Finalizado' : '⚔️ Em andamento'}
                               </span>
+                              {contest.isFinished && contest.winnerId && (
+                                <span
+                                  className={styles.badge}
+                                  style={{
+                                    background: 'rgba(245, 158, 11, 0.1)',
+                                    color: '#FCD34D',
+                                    border: '1px solid #FBBF24',
+                                  }}
+                                >
+                                  👑 {memberMap[contest.winnerId] ?? `#${contest.winnerId}`}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <span className={styles.contestChevron}>{isExpanded ? '▲' : '▼'}</span>
