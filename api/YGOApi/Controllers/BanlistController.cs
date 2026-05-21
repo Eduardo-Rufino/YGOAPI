@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Banlist;
@@ -16,6 +16,13 @@ public class BanlistController : ControllerBase
     public BanlistController(WriteContext context)
     {
         _context = context;
+    }
+
+    [HttpGet]
+    public IActionResult GetBanlists()
+    {
+        var banlists = _context.Banlists.Select(b => new { b.Id, b.Name }).ToList();
+        return Ok(banlists);
     }
 
     [HttpPost]

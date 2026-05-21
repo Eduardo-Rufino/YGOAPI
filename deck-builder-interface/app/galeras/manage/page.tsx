@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { galeraService, UserGalera } from '@/features/galeras/galeraService';
-import { contestService, Contest, ContestDetail } from '@/features/galeras/contestService';
+import { contestService, Contest, ContestDetail, Banlist } from '@/features/galeras/contestService';
 import { authService } from '@/features/auth/authService';
 import styles from '@/features/galeras/Galera.module.css';
 
@@ -34,6 +34,14 @@ export default function ManageGaleraPage() {
   const [contestDetail, setContestDetail] = useState<ContestDetail | null>(null);
   const [contestLoading, setContestLoading] = useState(false);
   const [winnerLoading, setWinnerLoading] = useState<number | null>(null);
+  const [expandedPlayerId, setExpandedPlayerId] = useState<number | null>(null);
+
+  // Create Contest state
+  const [banlists, setBanlists] = useState<Banlist[]>([]);
+  const [showCreateContest, setShowCreateContest] = useState(false);
+  const [newContestName, setNewContestName] = useState('');
+  const [newContestBanlistId, setNewContestBanlistId] = useState<number | null>(null);
+  const [newContestType, setNewContestType] = useState<number>(0);
 
   // Mapeamento userId -> username para exibir nomes nas partidas
   const memberMap = React.useMemo(() => {
@@ -59,6 +67,12 @@ export default function ManageGaleraPage() {
   useEffect(() => {
     const user = authService.getUser();
     setIsAdmin(user?.role === 'Admin' || user?.role === 'ADMIN');
+
+    const loadBanlists = async () => {
+      const lists = await contestService.getBanlists();
+      setBanlists(lists);
+    };
+    loadBanlists();
 
     const id = galeraService.getActiveGaleraId();
     setActiveGaleraId(id);
@@ -156,6 +170,34 @@ export default function ManageGaleraPage() {
       setMessage({ text: 'Erro ao definir vencedor.', type: 'error' });
     } finally {
       setWinnerLoading(null);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleCreateContest = async () => {
+    if (!activeGaleraId) return;
+    if (!newContestName.trim()) {
+      setMessage({ text: 'O nome da competição é obrigatório.', type: 'error' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await contestService.createContest({
+        galeraId: activeGaleraId,
+        name: newContestName,
+        banlistId: newContestBanlistId || null,
+        type: newContestType
+      });
+      setMessage({ text: 'Competição criada com sucesso!', type: 'success' });
+      setShowCreateContest(false);
+      setNewContestName('');
+      setNewContestBanlistId(null);
+      setNewContestType(0);
+      await fetchContests(activeGaleraId);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Erro ao criar competição.', type: 'error' });
+    } finally {
+      setLoading(false);
       setTimeout(() => setMessage(null), 3000);
     }
   };
@@ -326,7 +368,74 @@ export default function ManageGaleraPage() {
 
             {/* ── Competições ── */}
             <div className={styles.contestSection}>
-              <div className={styles.sectionTitle}>🏆 Competições</div>
+              <div className={styles.sectionTitle} style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🏆 Competições
+                </div>
+                {isAdmin && (
+                  <button 
+                    className={styles.btnToggleForm}
+                    onClick={() => setShowCreateContest(!showCreateContest)}
+                  >
+                    {showCreateContest ? 'Cancelar' : 'Criar nova competição'}
+                  </button>
+                )}
+              </div>
+
+              {showCreateContest && (
+                <div className={styles.createContestForm}>
+                  <div className={styles.createContestHeader}>
+                    <h3 style={{ margin: 0, color: '#ADEBB3' }}>Nova Competição</h3>
+                  </div>
+                  
+                  <div className={styles.inputGroup}>
+                    <label>Nome da Competição</label>
+                    <input 
+                      className={styles.input} 
+                      value={newContestName}
+                      onChange={e => setNewContestName(e.target.value)}
+                      placeholder="Ex: Torneio de Inverno"
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div className={styles.inputGroup} style={{ flex: 1, minWidth: '200px' }}>
+                      <label>Banlist (Opcional)</label>
+                      <select 
+                        className={styles.selectInput}
+                        value={newContestBanlistId || ''}
+                        onChange={e => setNewContestBanlistId(e.target.value ? Number(e.target.value) : null)}
+                      >
+                        <option value="">-- Sem Banlist --</option>
+                        {banlists.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className={styles.inputGroup} style={{ flex: 1, minWidth: '200px' }}>
+                      <label>Tipo</label>
+                      <select 
+                        className={styles.selectInput}
+                        value={newContestType}
+                        onChange={e => setNewContestType(Number(e.target.value))}
+                      >
+                        <option value={0}>Round Robin (Todos contra todos)</option>
+                        <option value={1}>Torneio (Mata-mata)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button 
+                    className={styles.btnSubmit}
+                    onClick={handleCreateContest}
+                    disabled={loading}
+                    style={{ marginTop: '0.5rem' }}
+                  >
+                    {loading ? 'Criando...' : 'Confirmar e Criar'}
+                  </button>
+                </div>
+              )}
 
               {contests.length === 0 ? (
                 <div className={styles.emptyState}>Nenhuma competição encontrada para esta galera.</div>
@@ -374,74 +483,86 @@ export default function ManageGaleraPage() {
                             ) : contestDetail.matches.length === 0 ? (
                               <div className={styles.emptyState}>Nenhuma partida cadastrada.</div>
                             ) : (
-                              <div className={styles.tableContainer}>
-                                <table className={styles.table}>
-                                  <thead>
-                                    <tr>
-                                      <th className={styles.th}>Fase</th>
-                                      <th className={styles.th}>Jogador 1</th>
-                                      <th className={styles.th}>Jogador 2</th>
-                                      <th className={styles.th}>Vencedor</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {contestDetail.matches.map((match) => {
-                                      const p1Name = memberMap[match.player1Id] ?? `#${match.player1Id}`;
-                                      const p2Name = match.player2Id
-                                        ? memberMap[match.player2Id] ?? `#${match.player2Id}`
-                                        : '—';
-                                      const currentWinnerName = match.winnerId
-                                        ? memberMap[match.winnerId] ?? `#${match.winnerId}`
-                                        : null;
-
-                                      return (
-                                        <tr key={match.id}>
-                                          <td className={styles.td}>
-                                            {STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}
-                                          </td>
-                                          <td className={styles.td}>{p1Name}</td>
-                                          <td className={styles.td}>{p2Name}</td>
-                                          <td className={styles.td}>
-                                            {/* Se contest encerrado, mostra só o nome do vencedor */}
-                                            {contestDetail.contest.isFinished ? (
-                                              <span
-                                                style={{
-                                                  color: currentWinnerName ? '#10B981' : '#94A3B8',
-                                                  fontWeight: currentWinnerName ? 700 : 400,
-                                                }}
-                                              >
-                                                {currentWinnerName ?? '—'}
-                                              </span>
-                                            ) : (
-                                              /* Contest em andamento: dropdown para selecionar */
-                                              <select
-                                                className={styles.winnerSelect}
-                                                value={match.winnerId ?? ''}
-                                                disabled={
-                                                  !match.player2Id || winnerLoading === match.id
-                                                }
-                                                onChange={(e) => {
-                                                  const val = e.target.value;
-                                                  if (val) handleSetWinner(match.id, Number(val));
-                                                }}
-                                              >
-                                                <option value="">
-                                                  {winnerLoading === match.id
-                                                    ? 'Salvando...'
-                                                    : '— Selecionar —'}
-                                                </option>
-                                                <option value={match.player1Id}>{p1Name}</option>
-                                                {match.player2Id && (
-                                                  <option value={match.player2Id}>{p2Name}</option>
-                                                )}
-                                              </select>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
+                              <div className={styles.playerGroupsContainer}>
+                                {Array.from(new Set(contestDetail.matches.map(m => m.player1Id))).map(playerId => {
+                                  const playerMatches = contestDetail.matches.filter(m => m.player1Id === playerId);
+                                  const playerName = memberMap[playerId] ?? `#${playerId}`;
+                                  const isExpandedPlayer = expandedPlayerId === playerId;
+                                  
+                                  return (
+                                    <div key={playerId} className={styles.playerGroup}>
+                                      <button 
+                                        className={styles.playerGroupHeader}
+                                        onClick={() => setExpandedPlayerId(isExpandedPlayer ? null : playerId)}
+                                      >
+                                        <div className={styles.playerGroupName}>
+                                          <div
+                                            style={{
+                                              width: '24px', height: '24px', borderRadius: '50%',
+                                              background: 'rgba(138, 43, 226, 0.4)',
+                                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                              fontSize: '0.7rem'
+                                            }}
+                                          >
+                                            {playerName.substring(0, 2).toUpperCase()}
+                                          </div>
+                                          {playerName} ({playerMatches.length} partidas)
+                                        </div>
+                                        <span className={styles.contestChevron}>{isExpandedPlayer ? '▲' : '▼'}</span>
+                                      </button>
+                                      
+                                      {isExpandedPlayer && (
+                                        <div className={styles.playerGroupBody}>
+                                          <div className={styles.tableContainer} style={{ marginTop: 0 }}>
+                                            <table className={styles.table}>
+                                              <thead>
+                                                <tr>
+                                                  <th className={styles.th}>Fase</th>
+                                                  <th className={styles.th}>Adversário</th>
+                                                  <th className={styles.th}>Vencedor</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {playerMatches.map(match => {
+                                                  const p2Name = match.player2Id ? (memberMap[match.player2Id] ?? `#${match.player2Id}`) : '—';
+                                                  const currentWinnerName = match.winnerId ? (memberMap[match.winnerId] ?? `#${match.winnerId}`) : null;
+                                                  
+                                                  return (
+                                                    <tr key={match.id}>
+                                                      <td className={styles.td}>{STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}</td>
+                                                      <td className={styles.td}>{p2Name}</td>
+                                                      <td className={styles.td}>
+                                                        {contestDetail.contest.isFinished ? (
+                                                          <span style={{ color: currentWinnerName ? '#10B981' : '#94A3B8', fontWeight: currentWinnerName ? 700 : 400 }}>
+                                                            {currentWinnerName ?? '—'}
+                                                          </span>
+                                                        ) : (
+                                                          <select
+                                                            className={styles.winnerSelect}
+                                                            value={match.winnerId ?? ''}
+                                                            disabled={!match.player2Id || winnerLoading === match.id}
+                                                            onChange={(e) => {
+                                                              const val = e.target.value;
+                                                              if (val) handleSetWinner(match.id, Number(val));
+                                                            }}
+                                                          >
+                                                            <option value="">{winnerLoading === match.id ? 'Salvando...' : '— Selecionar —'}</option>
+                                                            <option value={match.player1Id}>{playerName}</option>
+                                                            {match.player2Id && <option value={match.player2Id}>{p2Name}</option>}
+                                                          </select>
+                                                        )}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                })}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
