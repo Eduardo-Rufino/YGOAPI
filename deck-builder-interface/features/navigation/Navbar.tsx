@@ -157,8 +157,8 @@ export const Navbar: React.FC = () => {
         {isAdmin && (
           <li>
             <Link
-              href="/admin/import"
-              className={`${styles.navLink} ${isActive('/admin/import') ? styles.active : ''}`}
+              href="/admin"
+              className={`${styles.navLink} ${isActive('/admin') ? styles.active : ''}`}
               style={{ color: '#FCD34D' }} // Gold-ish for admin
               onClick={closeMenu}
             >

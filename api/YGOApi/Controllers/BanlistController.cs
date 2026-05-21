@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Banlist;
@@ -16,6 +16,43 @@ public class BanlistController : ControllerBase
     public BanlistController(WriteContext context)
     {
         _context = context;
+    }
+
+    [HttpGet]
+    public IActionResult GetBanlists()
+    {
+        var banlists = _context.Banlists.Select(b => new { b.Id, b.Name }).ToList();
+        return Ok(banlists);
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult GetBanlist(int id)
+    {
+        var banlist = _context.Banlists.FirstOrDefault(x => x.Id == id);
+        if (banlist == null) return NotFound();
+
+        var dto = new BanlisttDto
+        {
+            Name = banlist.Name,
+            Banlist = new List<CardLimitation>()
+        };
+
+        if (!string.IsNullOrEmpty(banlist.ForbiddenCardsIds))
+            foreach (var cid in banlist.ForbiddenCardsIds.Split(','))
+                if (int.TryParse(cid, out int parsed))
+                    dto.Banlist.Add(new CardLimitation { CardId = parsed, Status = Data.Enums.CardBanStatus.BANNED });
+
+        if (!string.IsNullOrEmpty(banlist.LimitedCardsIds))
+            foreach (var cid in banlist.LimitedCardsIds.Split(','))
+                if (int.TryParse(cid, out int parsed))
+                    dto.Banlist.Add(new CardLimitation { CardId = parsed, Status = Data.Enums.CardBanStatus.LIMITED });
+
+        if (!string.IsNullOrEmpty(banlist.SemiLimitedCardsIds))
+            foreach (var cid in banlist.SemiLimitedCardsIds.Split(','))
+                if (int.TryParse(cid, out int parsed))
+                    dto.Banlist.Add(new CardLimitation { CardId = parsed, Status = Data.Enums.CardBanStatus.SEMI_LIMITED });
+
+        return Ok(dto);
     }
 
     [HttpPost]
