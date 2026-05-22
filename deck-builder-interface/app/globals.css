@@ -1,13 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #8A2BE2;
-  --secondary: #ADEBB3;
-  --neutral: #24324D; /* Deep Blue for cards/containers */
-  --support: #E89EB8;
-  
-  --background: #1E293B; /* Midnight Blue for general background */
-  --foreground: #F1F5F9; /* Gelo for general text */
+  /* ── Fundo principal ── */
+  --bg-primary: #070B14;
+  --bg-secondary: #0D1321;
+  --bg-tertiary: #111827;
+
+  /* ── Cards / painéis ── */
+  --card-bg: #131C2E;
+  --card-bg-hover: #1B2740;
+  --card-border: #243B63;
+
+  /* ── Cores neon de destaque ── */
+  --neon-blue: #3B82F6;
+  --neon-electric: #2563EB;
+  --neon-purple: #7C3AED;
+  --neon-purple-vibrant: #9333EA;
+  --neon-cyan: #06B6D4;
+
+  /* ── Feedback / status ── */
+  --success: #22C55E;
+  --warning: #FACC15;
+  --error: #EF4444;
+
+  /* ── Texto ── */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+
+  /* ── Backward compat aliases ── */
+  --primary: #3B82F6;
+  --secondary: #06B6D4;
+  --neutral: #131C2E;
+  --support: #9333EA;
+  --background: #070B14;
+  --foreground: #F8FAFC;
 }
 
 @theme inline {
@@ -20,8 +47,30 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
   min-height: 100vh;
+}
+
+/* Global neon glow utility */
+::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: #F8FAFC;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0D1321;
+}
+::-webkit-scrollbar-thumb {
+  background: #243B63;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B82F6;
 }

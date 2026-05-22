@@ -11,7 +11,7 @@
 .title {
   font-size: 2rem;
   font-weight: bold;
-  color: #ADEBB3;
+  color: #06B6D4;
   margin-bottom: 0.5rem;
 }
 
@@ -21,8 +21,8 @@
 }
 
 .card {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 28, 46, 0.7);
+  border: 1px solid #243B63;
   border-radius: 12px;
   padding: 2rem;
   backdrop-filter: blur(10px);
@@ -37,12 +37,12 @@
 
 .inputGroup label {
   font-weight: 600;
-  color: #E2E8F0;
+  color: #CBD5E1;
 }
 
 .input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  background: rgba(7, 11, 20, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: #F8FAFC;
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -52,12 +52,12 @@
 }
 
 .input:focus {
-  border-color: #8A2BE2;
-  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .btnSubmit {
-  background: linear-gradient(135deg, #8A2BE2 0%, #4C1D95 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -106,10 +106,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(7, 11, 20, 0.5);
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(36, 59, 99, 0.5);
 }
 
 .userName {
@@ -130,28 +130,28 @@
 }
 
 .th {
-  background: rgba(138, 43, 226, 0.2);
-  color: #ADEBB3;
+  background: rgba(59, 130, 246, 0.15);
+  color: #06B6D4;
   padding: 1rem;
   font-weight: 700;
-  border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+  border-bottom: 2px solid rgba(59, 130, 246, 0.25);
 }
 
 .td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(36, 59, 99, 0.3);
   color: #F8FAFC;
 }
 
 .addSection {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed #243B63;
 }
 
 .sectionTitle {
   font-size: 1.25rem;
-  color: #ADEBB3;
+  color: #06B6D4;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -162,7 +162,7 @@
 .contestSection {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed #243B63;
 }
 
 .contestList {
@@ -172,10 +172,10 @@
 }
 
 .contestCard {
-  border: 1px solid rgba(138, 43, 226, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(7, 11, 20, 0.4);
 }
 
 .contestHeader {
@@ -184,7 +184,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  background: rgba(138, 43, 226, 0.1);
+  background: rgba(59, 130, 246, 0.06);
   border: none;
   cursor: pointer;
   color: #F8FAFC;
@@ -193,7 +193,7 @@
 }
 
 .contestHeader:hover {
-  background: rgba(138, 43, 226, 0.2);
+  background: rgba(59, 130, 246, 0.12);
 }
 
 .contestHeaderLeft {
@@ -205,7 +205,7 @@
 .contestName {
   font-size: 1rem;
   font-weight: 700;
-  color: #E2E8F0;
+  color: #CBD5E1;
 }
 
 .contestBadges {
@@ -219,9 +219,9 @@
   font-weight: 600;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(138, 43, 226, 0.2);
-  color: #C084FC;
-  border: 1px solid rgba(138, 43, 226, 0.4);
+  background: rgba(124, 58, 237, 0.15);
+  color: #9333EA;
+  border: 1px solid rgba(124, 58, 237, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -235,12 +235,12 @@
 
 .contestBody {
   padding: 1rem 1.25rem 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(36, 59, 99, 0.3);
 }
 
 .winnerSelect {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(138, 43, 226, 0.4);
+  background: rgba(7, 11, 20, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: #F8FAFC;
   padding: 0.4rem 0.75rem;
   border-radius: 6px;
@@ -251,8 +251,8 @@
 }
 
 .winnerSelect:focus {
-  border-color: #8A2BE2;
-  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .winnerSelect:disabled {
@@ -275,8 +275,8 @@
 
 /* ── Contest Creation Form ── */
 .createContestForm {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  background: rgba(7, 11, 20, 0.4);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 8px;
   padding: 1.5rem;
   margin-top: 1rem;
@@ -293,8 +293,8 @@
 }
 
 .selectInput {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  background: rgba(7, 11, 20, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   color: #F8FAFC;
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -305,14 +305,14 @@
 }
 
 .selectInput:focus {
-  border-color: #8A2BE2;
-  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .btnToggleForm {
-  background: rgba(138, 43, 226, 0.2);
-  color: #C084FC;
-  border: 1px solid rgba(138, 43, 226, 0.4);
+  background: rgba(124, 58, 237, 0.15);
+  color: #9333EA;
+  border: 1px solid rgba(124, 58, 237, 0.3);
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-weight: bold;
@@ -321,13 +321,13 @@
 }
 
 .btnToggleForm:hover {
-  background: rgba(138, 43, 226, 0.4);
+  background: rgba(124, 58, 237, 0.3);
 }
 
 /* ── Player Group ── */
 .playerGroup {
   margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #243B63;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -338,7 +338,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(27, 39, 64, 0.5);
   border: none;
   cursor: pointer;
   color: #F8FAFC;
@@ -347,7 +347,7 @@
 }
 
 .playerGroupHeader:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(27, 39, 64, 0.8);
 }
 
 .playerGroupName {
@@ -359,8 +359,8 @@
 
 .playerGroupBody {
   padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(15, 23, 42, 0.2);
+  border-top: 1px solid rgba(36, 59, 99, 0.3);
+  background: rgba(7, 11, 20, 0.2);
 }
 
 /* ── Podium Styles ── */
