@@ -558,10 +558,24 @@ export default function ManageGaleraPage() {
                                   const playerName = memberMap[playerId] ?? `#${playerId}`;
                                   const isExpandedPlayer = expandedPlayerId === playerId;
                                   
+                                  const wins = playerMatches.filter(m => m.winnerId === playerId).length;
+                                  const losses = playerMatches.filter(m => m.winnerId && m.winnerId !== playerId).length;
+                                  
+                                  let groupStyle = {};
+                                  let headerStyle = {};
+                                  if (wins > losses) {
+                                    groupStyle = { borderColor: '#10B981' };
+                                    headerStyle = { background: 'rgba(16, 185, 129, 0.2)' };
+                                  } else if (losses > wins) {
+                                    groupStyle = { borderColor: '#EF4444' };
+                                    headerStyle = { background: 'rgba(239, 68, 68, 0.2)' };
+                                  }
+                                  
                                   return (
-                                    <div key={playerId} className={styles.playerGroup}>
+                                    <div key={playerId} className={styles.playerGroup} style={groupStyle}>
                                       <button 
                                         className={styles.playerGroupHeader}
+                                        style={headerStyle}
                                         onClick={() => setExpandedPlayerId(isExpandedPlayer ? null : playerId)}
                                       >
                                         <div className={styles.playerGroupName}>
@@ -598,8 +612,15 @@ export default function ManageGaleraPage() {
                                                   const opponentName = opponentId ? (memberMap[opponentId] ?? `#${opponentId}`) : '—';
                                                   const currentWinnerName = match.winnerId ? (memberMap[match.winnerId] ?? `#${match.winnerId}`) : null;
                                                   
+                                                  let rowStyle = {};
+                                                  if (match.winnerId === playerId) {
+                                                    rowStyle = { background: 'rgba(16, 185, 129, 0.15)' };
+                                                  } else if (match.winnerId && match.winnerId !== playerId) {
+                                                    rowStyle = { background: 'rgba(239, 68, 68, 0.15)' };
+                                                  }
+                                                  
                                                   return (
-                                                    <tr key={match.id}>
+                                                    <tr key={match.id} style={rowStyle}>
                                                       <td className={styles.td}>{STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}</td>
                                                       <td className={styles.td}>{opponentName}</td>
                                                       <td className={styles.td}>
