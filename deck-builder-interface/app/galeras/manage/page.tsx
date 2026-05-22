@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { galeraService, UserGalera } from '@/features/galeras/galeraService';
-import { contestService, Contest, ContestDetail, Banlist } from '@/features/galeras/contestService';
+import { contestService, Contest, ContestDetail, Banlist, Match } from '@/features/galeras/contestService';
 import { authService } from '@/features/auth/authService';
 import styles from '@/features/galeras/Galera.module.css';
 
@@ -18,6 +18,101 @@ const STAGE_LABEL: Record<number, string> = {
   3: 'Semifinal',
   4: 'Final',
 };
+
+interface PlayerStats {
+  id: number;
+  name: string;
+  wins: number;
+  losses: number;
+  highestStage: number;
+}
+
+function getContestStandings(
+  contest: Contest,
+  matches: Match[],
+  memberMap: Record<number, string>
+): PlayerStats[] {
+  const playerIds = Array.from(
+    new Set(matches.flatMap(m => m.player2Id ? [m.player1Id, m.player2Id] : [m.player1Id]))
+  );
+
+  const statsList: PlayerStats[] = playerIds.map(playerId => {
+    const playerMatches = matches.filter(m => m.player1Id === playerId || m.player2Id === playerId);
+    const wins = playerMatches.filter(m => m.winnerId === playerId).length;
+    const losses = playerMatches.filter(m => m.winnerId && m.winnerId !== playerId).length;
+    
+    let highestStage = 0;
+    playerMatches.forEach(m => {
+      if (m.stage > highestStage) {
+        highestStage = m.stage;
+      }
+    });
+
+    return {
+      id: playerId,
+      name: memberMap[playerId] ?? `#${playerId}`,
+      wins,
+      losses,
+      highestStage,
+    };
+  });
+
+  statsList.sort((a, b) => {
+    if (contest.type === 1) {
+      // Torneio (Mata-mata)
+      if (contest.isFinished && contest.winnerId) {
+        if (a.id === contest.winnerId) return -1;
+        if (b.id === contest.winnerId) return 1;
+      }
+
+      // 1. Fase mais alta alcançada
+      if (a.highestStage !== b.highestStage) {
+        return b.highestStage - a.highestStage;
+      }
+
+      // 2. Vitórias
+      if (a.wins !== b.wins) {
+        return b.wins - a.wins;
+      }
+
+      // 3. Menos derrotas
+      if (a.losses !== b.losses) {
+        return a.losses - b.losses;
+      }
+    } else {
+      // Round Robin (Todos contra todos)
+      if (contest.isFinished && contest.winnerId) {
+        if (a.id === contest.winnerId) return -1;
+        if (b.id === contest.winnerId) return 1;
+      }
+
+      // 1. Número de vitórias
+      if (a.wins !== b.wins) {
+        return b.wins - a.wins;
+      }
+
+      // 2. Confronto direto
+      const directMatches = matches.filter(
+        m => (m.player1Id === a.id && m.player2Id === b.id) || 
+             (m.player1Id === b.id && m.player2Id === a.id)
+      );
+      const winsA = directMatches.filter(m => m.winnerId === a.id).length;
+      const winsB = directMatches.filter(m => m.winnerId === b.id).length;
+      if (winsA !== winsB) {
+        return winsB - winsA; // Quem venceu mais confrontos diretos fica acima (menor índice)
+      }
+
+      // 3. Menos derrotas
+      if (a.losses !== b.losses) {
+        return a.losses - b.losses;
+      }
+    }
+
+    return a.name.localeCompare(b.name);
+  });
+
+  return statsList;
+}
 
 export default function ManageGaleraPage() {
   const [members, setMembers] = useState<UserGalera[]>([]);
@@ -38,6 +133,9 @@ export default function ManageGaleraPage() {
 
   const [finishingContestId, setFinishingContestId] = useState<number | null>(null);
   const [selectedWinnerId, setSelectedWinnerId] = useState<number | ''>('');
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'members' | 'contests'>('members');
 
   // Create Contest state
   const [banlists, setBanlists] = useState<Banlist[]>([]);
@@ -64,7 +162,8 @@ export default function ManageGaleraPage() {
 
   const fetchContests = useCallback(async (id: number) => {
     const data = await contestService.getByGaleraId(id);
-    setContests(data);
+    const sorted = [...data].sort((a, b) => b.id - a.id);
+    setContests(sorted);
   }, []);
 
   useEffect(() => {
@@ -259,7 +358,25 @@ export default function ManageGaleraPage() {
               </div>
             )}
 
-            {/* ── Membros ── */}
+            {/* Tab Navigation */}
+            <div className={styles.tabContainer}>
+              <button
+                className={`${styles.tabButton} ${activeTab === 'members' ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab('members')}
+              >
+                👥 Membros
+              </button>
+              <button
+                className={`${styles.tabButton} ${activeTab === 'contests' ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab('contests')}
+              >
+                🏆 Torneios
+              </button>
+            </div>
+
+            {activeTab === 'members' && (
+              <>
+                {/* ── Membros ── */}
             <div className={styles.sectionTitle}>👥 Membros Atuais</div>
 
             <div className={styles.tableContainer}>
@@ -392,9 +509,11 @@ export default function ManageGaleraPage() {
                 )}
               </div>
             )}
+              </>
+            )}
 
-            {/* ── Competições ── */}
-            <div className={styles.contestSection}>
+            {activeTab === 'contests' && (
+              <div className={styles.contestSection}>
               <div className={styles.sectionTitle} style={{ justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   🏆 Competições
@@ -521,121 +640,185 @@ export default function ManageGaleraPage() {
                               <div className={styles.emptyState}>Não foi possível carregar os detalhes.</div>
                             ) : contestDetail.matches.length === 0 ? (
                               <div className={styles.emptyState}>Nenhuma partida cadastrada.</div>
-                            ) : (
-                              <div className={styles.playerGroupsContainer}>
-                                {!contestDetail.contest.isFinished && contestDetail.contest.type === 0 && isAdmin && (
-                                  <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(138, 43, 226, 0.3)' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#ADEBB3' }}>Encerrar Competição</h4>
-                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                      <div style={{ flex: 1, minWidth: '200px' }}>
-                                        <label style={{ fontSize: '0.85rem', color: '#E2E8F0', display: 'block', marginBottom: '0.25rem' }}>Selecione o Vencedor Final</label>
-                                        <select 
-                                          className={styles.selectInput} 
-                                          value={finishingContestId === contest.id ? selectedWinnerId : ''}
-                                          onChange={e => {
-                                            setFinishingContestId(contest.id);
-                                            setSelectedWinnerId(e.target.value ? Number(e.target.value) : '');
-                                          }}
-                                        >
-                                          <option value="">-- Selecionar --</option>
-                                          {members.map(m => (
-                                            <option key={m.userId} value={m.userId}>{m.username}</option>
-                                          ))}
-                                        </select>
+                                                        ) : (() => {
+                              const standings = getContestStandings(contestDetail.contest, contestDetail.matches, memberMap);
+                              return (
+                                <div className={styles.playerGroupsContainer}>
+                                  {standings.length > 0 && (
+                                    <>
+                                      <div className={styles.podiumTitle}>
+                                        🏆 Classificação Top 3
                                       </div>
-                                      <button 
-                                        className={styles.btnDanger}
-                                        onClick={() => handleFinishContest(contest.id)}
-                                        disabled={loading || finishingContestId !== contest.id || selectedWinnerId === ''}
-                                      >
-                                        {loading && finishingContestId === contest.id ? 'Encerrando...' : 'Encerrar'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                                {Array.from(new Set(contestDetail.matches.flatMap(m => m.player2Id ? [m.player1Id, m.player2Id] : [m.player1Id]))).map(playerId => {
-                                  const playerMatches = contestDetail.matches.filter(m => m.player1Id === playerId || m.player2Id === playerId);
-                                  const playerName = memberMap[playerId] ?? `#${playerId}`;
-                                  const isExpandedPlayer = expandedPlayerId === playerId;
-                                  
-                                  return (
-                                    <div key={playerId} className={styles.playerGroup}>
-                                      <button 
-                                        className={styles.playerGroupHeader}
-                                        onClick={() => setExpandedPlayerId(isExpandedPlayer ? null : playerId)}
-                                      >
-                                        <div className={styles.playerGroupName}>
-                                          <div
-                                            style={{
-                                              width: '24px', height: '24px', borderRadius: '50%',
-                                              background: 'rgba(138, 43, 226, 0.4)',
-                                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                              fontSize: '0.7rem'
+                                      <div className={styles.podiumContainer}>
+                                        {/* 2º Lugar */}
+                                        {standings[1] && (
+                                          <div className={`${styles.podiumCard} ${styles.podiumSecond}`}>
+                                            <div className={styles.podiumBadge}>2º</div>
+                                            <div className={styles.podiumPlayerName}>{standings[1].name}</div>
+                                            <div className={styles.podiumStats}>
+                                              {standings[1].wins} V - {standings[1].losses} D
+                                            </div>
+                                          </div>
+                                        )}
+                                        {/* 1º Lugar */}
+                                        {standings[0] && (
+                                          <div className={`${styles.podiumCard} ${styles.podiumFirst}`}>
+                                            <div className={styles.podiumBadge}>👑</div>
+                                            <div className={styles.podiumPlayerName}>{standings[0].name}</div>
+                                            <div className={styles.podiumStats}>
+                                              {standings[0].wins} V - {standings[0].losses} D
+                                            </div>
+                                          </div>
+                                        )}
+                                        {/* 3º Lugar */}
+                                        {standings[2] && (
+                                          <div className={`${styles.podiumCard} ${styles.podiumThird}`}>
+                                            <div className={styles.podiumBadge}>3º</div>
+                                            <div className={styles.podiumPlayerName}>{standings[2].name}</div>
+                                            <div className={styles.podiumStats}>
+                                              {standings[2].wins} V - {standings[2].losses} D
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+
+                                  {!contestDetail.contest.isFinished && contestDetail.contest.type === 0 && isAdmin && (
+                                    <div style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.4)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(138, 43, 226, 0.3)' }}>
+                                      <h4 style={{ margin: '0 0 0.5rem 0', color: '#ADEBB3' }}>Encerrar Competição</h4>
+                                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                          <label style={{ fontSize: '0.85rem', color: '#E2E8F0', display: 'block', marginBottom: '0.25rem' }}>Selecione o Vencedor Final</label>
+                                          <select 
+                                            className={styles.selectInput} 
+                                            value={finishingContestId === contest.id ? selectedWinnerId : ''}
+                                            onChange={e => {
+                                              setFinishingContestId(contest.id);
+                                              setSelectedWinnerId(e.target.value ? Number(e.target.value) : '');
                                             }}
                                           >
-                                            {playerName.substring(0, 2).toUpperCase()}
-                                          </div>
-                                          {playerName} ({playerMatches.length} partidas)
+                                            <option value="">-- Selecionar --</option>
+                                            {members.map(m => (
+                                              <option key={m.userId} value={m.userId}>{m.username}</option>
+                                            ))}
+                                          </select>
                                         </div>
-                                        <span className={styles.contestChevron}>{isExpandedPlayer ? '▲' : '▼'}</span>
-                                      </button>
-                                      
-                                      {isExpandedPlayer && (
-                                        <div className={styles.playerGroupBody}>
-                                          <div className={styles.tableContainer} style={{ marginTop: 0 }}>
-                                            <table className={styles.table}>
-                                              <thead>
-                                                <tr>
-                                                  <th className={styles.th}>Fase</th>
-                                                  <th className={styles.th}>Adversário</th>
-                                                  <th className={styles.th}>Vencedor</th>
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {playerMatches.map(match => {
-                                                  const isPlayer1 = match.player1Id === playerId;
-                                                  const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
-                                                  const opponentName = opponentId ? (memberMap[opponentId] ?? `#${opponentId}`) : '—';
-                                                  const currentWinnerName = match.winnerId ? (memberMap[match.winnerId] ?? `#${match.winnerId}`) : null;
-                                                  
-                                                  return (
-                                                    <tr key={match.id}>
-                                                      <td className={styles.td}>{STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}</td>
-                                                      <td className={styles.td}>{opponentName}</td>
-                                                      <td className={styles.td}>
-                                                        {contestDetail.contest.isFinished ? (
-                                                          <span style={{ color: currentWinnerName ? '#10B981' : '#94A3B8', fontWeight: currentWinnerName ? 700 : 400 }}>
-                                                            {currentWinnerName ?? '—'}
-                                                          </span>
-                                                        ) : (
-                                                          <select
-                                                            className={styles.winnerSelect}
-                                                            value={match.winnerId ?? ''}
-                                                            disabled={!match.player2Id || winnerLoading === match.id}
-                                                            onChange={(e) => {
-                                                              const val = e.target.value;
-                                                              if (val) handleSetWinner(match.id, Number(val));
-                                                            }}
-                                                          >
-                                                            <option value="">{winnerLoading === match.id ? 'Salvando...' : '— Selecionar —'}</option>
-                                                            <option value={playerId}>{playerName}</option>
-                                                            {opponentId && <option value={opponentId}>{opponentName}</option>}
-                                                          </select>
-                                                        )}
-                                                      </td>
-                                                    </tr>
-                                                  );
-                                                })}
-                                              </tbody>
-                                            </table>
-                                          </div>
-                                        </div>
-                                      )}
+                                        <button 
+                                          className={styles.btnDanger}
+                                          onClick={() => handleFinishContest(contest.id)}
+                                          disabled={loading || finishingContestId !== contest.id || selectedWinnerId === ''}
+                                        >
+                                          {loading && finishingContestId === contest.id ? 'Encerrando...' : 'Encerrar'}
+                                        </button>
+                                      </div>
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                                  )}
+                                  {Array.from(new Set(contestDetail.matches.flatMap(m => m.player2Id ? [m.player1Id, m.player2Id] : [m.player1Id]))).map(playerId => {
+                                    const playerMatches = contestDetail.matches.filter(m => m.player1Id === playerId || m.player2Id === playerId);
+                                    const playerName = memberMap[playerId] ?? `#${playerId}`;
+                                    const isExpandedPlayer = expandedPlayerId === playerId;
+                                    
+                                    const wins = playerMatches.filter(m => m.winnerId === playerId).length;
+                                    const losses = playerMatches.filter(m => m.winnerId && m.winnerId !== playerId).length;
+                                    
+                                    let groupStyle = {};
+                                    let headerStyle = {};
+                                    if (wins > losses) {
+                                      groupStyle = { borderColor: '#10B981' };
+                                      headerStyle = { background: 'rgba(16, 185, 129, 0.2)' };
+                                    } else if (losses > wins) {
+                                      groupStyle = { borderColor: '#EF4444' };
+                                      headerStyle = { background: 'rgba(239, 68, 68, 0.2)' };
+                                    }
+                                    
+                                    return (
+                                      <div key={playerId} className={styles.playerGroup} style={groupStyle}>
+                                        <button 
+                                          className={styles.playerGroupHeader}
+                                          style={headerStyle}
+                                          onClick={() => setExpandedPlayerId(isExpandedPlayer ? null : playerId)}
+                                        >
+                                          <div className={styles.playerGroupName}>
+                                            <div
+                                              style={{
+                                                width: '24px', height: '24px', borderRadius: '50%',
+                                                background: 'rgba(138, 43, 226, 0.4)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '0.7rem'
+                                              }}
+                                            >
+                                              {playerName.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            {playerName} ({playerMatches.length} partidas)
+                                          </div>
+                                          <span className={styles.contestChevron}>{isExpandedPlayer ? '▲' : '▼'}</span>
+                                        </button>
+                                        
+                                        {isExpandedPlayer && (
+                                          <div className={styles.playerGroupBody}>
+                                            <div className={styles.tableContainer} style={{ marginTop: 0 }}>
+                                              <table className={styles.table}>
+                                                <thead>
+                                                  <tr>
+                                                    <th className={styles.th}>Fase</th>
+                                                    <th className={styles.th}>Adversário</th>
+                                                    <th className={styles.th}>Vencedor</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  {playerMatches.map(match => {
+                                                    const isPlayer1 = match.player1Id === playerId;
+                                                    const opponentId = isPlayer1 ? match.player2Id : match.player1Id;
+                                                    const opponentName = opponentId ? (memberMap[opponentId] ?? `#${opponentId}`) : '—';
+                                                    const currentWinnerName = match.winnerId ? (memberMap[match.winnerId] ?? `#${match.winnerId}`) : null;
+                                                    
+                                                    let rowStyle = {};
+                                                    if (match.winnerId === playerId) {
+                                                      rowStyle = { background: 'rgba(16, 185, 129, 0.15)' };
+                                                    } else if (match.winnerId && match.winnerId !== playerId) {
+                                                      rowStyle = { background: 'rgba(239, 68, 68, 0.15)' };
+                                                    }
+                                                    
+                                                    return (
+                                                      <tr key={match.id} style={rowStyle}>
+                                                        <td className={styles.td}>{STAGE_LABEL[match.stage] ?? `Fase ${match.stage}`}</td>
+                                                        <td className={styles.td}>{opponentName}</td>
+                                                        <td className={styles.td}>
+                                                          {contestDetail.contest.isFinished ? (
+                                                            <span style={{ color: currentWinnerName ? '#10B981' : '#94A3B8', fontWeight: currentWinnerName ? 700 : 400 }}>
+                                                              {currentWinnerName ?? '—'}
+                                                            </span>
+                                                          ) : (
+                                                            <select
+                                                              className={styles.winnerSelect}
+                                                              value={match.winnerId ?? ''}
+                                                              disabled={!match.player2Id || winnerLoading === match.id}
+                                                              onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val) handleSetWinner(match.id, Number(val));
+                                                              }}
+                                                            >
+                                                              <option value="">{winnerLoading === match.id ? 'Salvando...' : '— Selecionar —'}</option>
+                                                              <option value={playerId}>{playerName}</option>
+                                                              {opponentId && <option value={opponentId}>{opponentName}</option>}
+                                                            </select>
+                                                          )}
+                                                        </td>
+                                                      </tr>
+                                                    );
+                                                  })}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
@@ -644,6 +827,7 @@ export default function ManageGaleraPage() {
                 </div>
               )}
             </div>
+            )}
           </>
         )}
       </div>
