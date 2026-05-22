@@ -15,6 +15,7 @@ interface MemberCollectionModalProps {
 const MemberCollectionModal: React.FC<MemberCollectionModalProps> = ({ member, onClose }) => {
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!member.userId) {
@@ -68,20 +69,50 @@ const MemberCollectionModal: React.FC<MemberCollectionModalProps> = ({ member, o
     fetchCollection();
   }, [member.userId]);
 
+  const filteredCards = searchTerm.trim()
+    ? cards.filter(card => card.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    : cards;
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
         <header className={styles.modalHeader}>
-          <h2>Coleção de {member.username} ({cards.length})</h2>
+          <h2>
+            Coleção de {member.username}{' '}
+            <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 400 }}>
+              ({searchTerm ? `${filteredCards.length} de ${cards.length}` : cards.length})
+            </span>
+          </h2>
           <button className={styles.closeBtn} onClick={onClose}>×</button>
         </header>
+
+        <div className={styles.searchBar}>
+          <span className={styles.searchIcon}>🔍</span>
+          <input
+            className={styles.searchInput}
+            type="text"
+            placeholder="Buscar carta por nome..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+          {searchTerm && (
+            <button
+              className={styles.clearSearch}
+              onClick={() => setSearchTerm('')}
+              title="Limpar busca"
+            >
+              ×
+            </button>
+          )}
+        </div>
         
         <div className={styles.modalBody}>
           {loading ? (
             <div className={styles.modalLoading}>Carregando coleção...</div>
-          ) : cards.length > 0 ? (
+          ) : filteredCards.length > 0 ? (
             <div className={styles.cardGrid}>
-              {cards.map((card, idx) => (
+              {filteredCards.map((card, idx) => (
                 <div key={card.id || idx} className={styles.cardItem}>
                   <div className={styles.cardWrapper}>
                     {card.quantity && card.quantity > 0 && (
@@ -99,9 +130,13 @@ const MemberCollectionModal: React.FC<MemberCollectionModalProps> = ({ member, o
                 </div>
               ))}
             </div>
-          ) : (
+          ) : cards.length === 0 ? (
             <div className={styles.emptyMessage}>
               Nenhuma carta encontrada para este membro nesta galera.
+            </div>
+          ) : (
+            <div className={styles.emptyMessage}>
+              Nenhuma carta encontrada com o nome &ldquo;{searchTerm}&rdquo;.
             </div>
           )}
         </div>
