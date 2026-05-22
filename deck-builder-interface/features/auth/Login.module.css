@@ -9,11 +9,11 @@
 .loginCard {
   width: 100%;
   max-width: 400px;
-  background: #24324D; /* Deep Blue */
+  background: #131C2E;
   padding: 3rem;
   border-radius: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 30px rgba(59, 130, 246, 0.05);
+  border: 1px solid #243B63;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -22,7 +22,7 @@
 .title {
   font-size: 1.875rem;
   font-weight: 800;
-  color: #F1F5F9; /* Gelo */
+  color: #F8FAFC;
   text-align: center;
   margin-bottom: 0.5rem;
 }
@@ -57,37 +57,39 @@
 .input {
   width: 100%;
   padding: 0.875rem 1rem;
-  background: #1E293B; /* Midnight Blue */
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0D1321;
+  border: 1px solid #243B63;
   border-radius: 12px;
-  color: #F1F5F9;
+  color: #F8FAFC;
   font-size: 0.9375rem;
   transition: all 0.2s;
 }
 
 .input:focus {
   outline: none;
-  border-color: #8A2BE2; /* Blue Violet */
-  box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.1);
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
 .loginBtn {
   margin-top: 1rem;
   padding: 1rem;
-  background: #8A2BE2; /* Blue Violet */
-  color: #F1F5F9;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: #F8FAFC;
   font-weight: 700;
   border-radius: 12px;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 .loginBtn:hover {
-  background: #ADEBB3; /* Mint Green */
-  color: #1E293B;
+  background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+  color: #F8FAFC;
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
 }
 
 .footer {
@@ -98,7 +100,7 @@
 }
 
 .link {
-  color: #8A2BE2;
+  color: #3B82F6;
   font-weight: 700;
   cursor: pointer;
 }
@@ -108,9 +110,9 @@
 }
 
 .errorMessage {
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.4);
-  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #EF4444;
   font-size: 0.875rem;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -120,7 +122,7 @@
 .successMessage {
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.4);
-  color: #86efac;
+  color: #22C55E;
   font-size: 0.875rem;
   padding: 0.75rem 1rem;
   border-radius: 10px;
