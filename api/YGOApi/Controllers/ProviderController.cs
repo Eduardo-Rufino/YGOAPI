@@ -141,7 +141,7 @@ public class ProviderController(WriteContext context, ICardProvider provider, IS
 
 
     [HttpPost("AtualizarCardsDb")]
-    public async Task<IActionResult> AtualizarCardsDb(string cardUrl)
+    public async Task<IActionResult> AtualizarCardsDb()
     {
         var cards = context.Cards.ToList();
 
@@ -151,7 +151,7 @@ public class ProviderController(WriteContext context, ICardProvider provider, IS
             HttpClient httpClient = new HttpClient();
 
             // Baixa a imagem como stream
-            var imageStream = await httpClient.GetStreamAsync(cardUrl);
+            var imageStream = await httpClient.GetStreamAsync(card.ImageUrlSmall);
 
             // Converte para StreamContent
             var streamContent = new StreamContent(imageStream);
