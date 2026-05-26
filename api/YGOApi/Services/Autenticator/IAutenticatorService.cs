@@ -4,7 +4,7 @@ namespace YGOApi.Services.Autenticator
 {
     public interface IAutenticatorService
     {
-        public string GerarToken(User user);
+        string GerarToken(User user);
 
         public void GenerateHashPassword(ref User user);
 
