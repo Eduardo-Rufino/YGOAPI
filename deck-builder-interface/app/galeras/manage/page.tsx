@@ -135,7 +135,21 @@ export default function ManageGaleraPage() {
   const [selectedWinnerId, setSelectedWinnerId] = useState<number | ''>('');
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'members' | 'contests'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'contests' | 'settings'>('members');
+
+  // Galera Settings state
+  const [galeraSettingsName, setGaleraSettingsName] = useState('');
+  const [galeraSettingsBanlistId, setGaleraSettingsBanlistId] = useState<number | null>(null);
+
+  const fetchGaleraDetails = useCallback(async (id: number) => {
+    try {
+      const g = await galeraService.getGalera(id);
+      setGaleraSettingsName(g.name);
+      setGaleraSettingsBanlistId(g.activeBanlistId ?? null);
+    } catch (e) {
+      console.error('Erro ao buscar galera', e);
+    }
+  }, []);
 
   // Create Contest state
   const [banlists, setBanlists] = useState<Banlist[]>([]);
@@ -181,6 +195,7 @@ export default function ManageGaleraPage() {
     if (id) {
       fetchMembers(id);
       fetchContests(id);
+      fetchGaleraDetails(id);
     }
 
     const handleGaleraChange = () => {
@@ -189,6 +204,7 @@ export default function ManageGaleraPage() {
       if (newId) {
         fetchMembers(newId);
         fetchContests(newId);
+        fetchGaleraDetails(newId);
       } else {
         setMembers([]);
         setContests([]);
@@ -199,7 +215,7 @@ export default function ManageGaleraPage() {
     };
     window.addEventListener('active-galera-changed', handleGaleraChange);
     return () => window.removeEventListener('active-galera-changed', handleGaleraChange);
-  }, [fetchMembers, fetchContests]);
+  }, [fetchMembers, fetchContests, fetchGaleraDetails]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -335,6 +351,25 @@ export default function ManageGaleraPage() {
     marginBottom: '1.5rem',
   });
 
+  const handleSaveGaleraSettings = async () => {
+    if (!activeGaleraId) return;
+    if (!galeraSettingsName.trim()) {
+      setMessage({ text: 'O nome da galera é obrigatório.', type: 'error' });
+      return;
+    }
+    setLoading(true);
+    try {
+      await galeraService.updateGalera(activeGaleraId, galeraSettingsName, galeraSettingsBanlistId);
+      setMessage({ text: 'Configurações salvas com sucesso!', type: 'success' });
+      window.dispatchEvent(new Event('galera-updated'));
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Erro ao salvar.', type: 'error' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header>
@@ -372,6 +407,14 @@ export default function ManageGaleraPage() {
               >
                 🏆 Torneios
               </button>
+              {isAdmin && (
+                <button
+                  className={`${styles.tabButton} ${activeTab === 'settings' ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab('settings')}
+                >
+                  ⚙️ Configurações
+                </button>
+              )}
             </div>
 
             {activeTab === 'members' && (
@@ -827,6 +870,46 @@ export default function ManageGaleraPage() {
                 </div>
               )}
             </div>
+            )}
+
+            {activeTab === 'settings' && isAdmin && (
+              <div className={styles.contestSection}>
+                <div className={styles.sectionTitle}>⚙️ Configurações da Galera</div>
+                <div className={styles.createContestForm}>
+                  <div className={styles.inputGroup}>
+                    <label>Nome da Galera</label>
+                    <input
+                      className={styles.input}
+                      value={galeraSettingsName}
+                      onChange={(e) => setGaleraSettingsName(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Banlist Ativa</label>
+                    <select
+                      className={styles.selectInput}
+                      value={galeraSettingsBanlistId || ''}
+                      onChange={(e) => setGaleraSettingsBanlistId(e.target.value ? Number(e.target.value) : null)}
+                    >
+                      <option value="">-- Sem Banlist (Ilimitado) --</option>
+                      {banlists.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                    <p style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '0.5rem' }}>
+                      A banlist selecionada será aplicada para todos os membros desta galera na hora de montar decks.
+                    </p>
+                  </div>
+                  <button
+                    className={styles.btnSubmit}
+                    onClick={handleSaveGaleraSettings}
+                    disabled={loading}
+                    style={{ marginTop: '1rem' }}
+                  >
+                    {loading ? 'Salvando...' : 'Salvar Configurações'}
+                  </button>
+                </div>
+              </div>
             )}
           </>
         )}

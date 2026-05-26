@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace YGOApi.Models;
 
@@ -11,4 +11,7 @@ public class Galera
     [Required(ErrorMessage ="O Nome é obrigatório")]
     [MaxLength(60, ErrorMessage = "O tamanho máximo Nome não pode exceder 60 caracteres")]
     public string Name { get; set; }
+
+    public int? ActiveBanlistId { get; set; }
+    public virtual Banlist? ActiveBanlist { get; set; }
 }
