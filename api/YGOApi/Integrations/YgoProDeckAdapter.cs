@@ -53,6 +53,7 @@ public class YgoProDeckAdapter : ICardProvider
 
         cardSets = cardSets.OrderBy(x => x.ReleasedDate).ToList();
         cardSets.RemoveAll(x => x.ReleasedDate == DateTime.MinValue);
+        cardSets.RemoveAll(x => x.SetName.Contains("promotional", StringComparison.CurrentCultureIgnoreCase));
 
         return cardSets;
     }
