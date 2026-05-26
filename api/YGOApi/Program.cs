@@ -13,6 +13,7 @@ using YGOApi.Models;
 using YGOApi.Services.Autenticator;
 using YGOApi.Services.Gatcha;
 using YGOApi.Services.PlayerCollection;
+using YGOApi.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,8 @@ builder.Services.AddScoped<IAutenticatorService, AutenticatorService>();
 builder.Services.AddScoped<IPlayerCollectionService, PlayerCollectionService>();
 
 builder.Services.AddScoped<IGatchaService, GatchaService>();
+
+builder.Services.AddScoped<IStorageService, StorageService>();
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<CardAtribute>();

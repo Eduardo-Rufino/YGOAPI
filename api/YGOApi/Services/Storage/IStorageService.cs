@@ -1,10 +1,11 @@
-﻿using YGOApi.Models;
+﻿using CloudinaryDotNet.Actions;
+using YGOApi.Models;
 
 namespace YGOApi.Services.Storage
 {
     public interface IStorageService
     {
-        void Upload(StreamContent arquive);
+        ImageUploadResult Upload(StreamContent arquive, string name, string folder);
 
     }
 }

@@ -4,6 +4,7 @@ using YGOApi.Data;
 using YGOApi.Data.Dtos.YgoProDeck;
 using YGOApi.Integrations;
 using YGOApi.Models;
+using YGOApi.Services.Storage;
 
 namespace YGOApi.Controllers;
 
@@ -19,7 +20,7 @@ namespace YGOApi.Controllers;
 /// </remarks>
 [ApiController]
 [Route("[controller]")]
-public class ProviderController(WriteContext context, ICardProvider provider) : ControllerBase
+public class ProviderController(WriteContext context, ICardProvider provider, IStorageService storage) : ControllerBase
 {
     /// <summary>
     /// Recupera colleções e starter decks do provedor externo ordenado por lançamento.
@@ -136,5 +137,26 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
         context.SaveChanges();
 
         return NoContent();
+    }
+
+
+    [HttpPost("AddCardToStorage")]
+    
+    public async Task<IActionResult> AddCardsToStorage(string cardUrl)
+    {
+        //baixar imagem pela url
+        HttpClient httpClient = new HttpClient();
+
+        // Baixa a imagem como stream
+        var imageStream = await httpClient.GetStreamAsync(cardUrl);
+
+        // Converte para StreamContent
+        var streamContent = new StreamContent(imageStream);
+
+        // Opcional: definir content-type
+        streamContent.Headers.ContentType =
+            new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+
+        return Ok(storage.Upload(streamContent, "card_image.png", "cards"));
     }
 }
