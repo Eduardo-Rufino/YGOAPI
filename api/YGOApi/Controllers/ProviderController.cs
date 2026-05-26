@@ -84,6 +84,7 @@ public class ProviderController(WriteContext context, ICardProvider provider, IS
     /// <summary>
     /// Converte uma lista de DTOs do YgoProDeck para entidades <see cref="Card"/> e persiste no banco.
     /// </summary>
+    /// <param name="galeraId">Id da galera.</param>
     /// <param name="cardList">Lista de <see cref="YgoProDeckCardDto"/> recebida no corpo da requisição.</param>
     /// <returns>
     /// Retorna 204 (NoContent) quando as cartas são persistidas com sucesso.

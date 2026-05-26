@@ -103,7 +103,7 @@ public class UserController : ControllerBase
                 Defense = x.Card.Defense,
                 CardName = x.Card.Name,
                 DeckName = x.Deck.Name,
-                ImageUrl = x.Card.ImageUrl,
+                ImageUrl = x.Card.ImageUrlSmall,
                 Quantity = x.Quantity
             })
             .ToList();

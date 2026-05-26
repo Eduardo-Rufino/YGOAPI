@@ -171,12 +171,12 @@ public class GaleraController : ControllerBase
                 Price = latestCollectionIds.Count > 0 && latestCollectionIds[0] == gc.CardCollectionId ? 3 :
                         latestCollectionIds.Count > 1 && latestCollectionIds[1] == gc.CardCollectionId ? 2 : 1,
                 CoverImageUrl = _context.Cards
-                    .Where(c => c.CollectionId == gc.CardCollectionId && c.Type == YGOApi.Data.Enums.CardType.MONSTER)
+                    .Where(c => c.CollectionId == gc.CardCollectionId && c.Type == Data.Enums.CardType.MONSTER)
                     .OrderByDescending(c => c.Attack)
-                    .Select(c => c.ImageUrl)
+                    .Select(c => c.ImageUrlSmall)
                     .FirstOrDefault() ?? _context.Cards
                         .Where(c => c.CollectionId == gc.CardCollectionId)
-                        .Select(c => c.ImageUrl)
+                        .Select(c => c.ImageUrlSmall)
                         .FirstOrDefault()
             })
             .Distinct()
@@ -203,7 +203,7 @@ public class GaleraController : ControllerBase
             {
                 c.Id,
                 c.Name,
-                c.ImageUrl,
+                ImageUrl = c.ImageUrlSmall,
                 c.ImageUrlSmall,
                 c.Rarity,
                 c.Quantity,
