@@ -166,6 +166,7 @@ public class GaleraController : ControllerBase
             .Where(gc => gc.GaleraId == galeraId)
             .Select(gc => new {
                 Id = gc.CardCollection.Id,
+                CollectionType = gc.CardCollection.Type,
                 Name = gc.CardCollection.Name,
                 RemainingStock = _context.Cards.Where(c => c.CollectionId == gc.CardCollectionId).Sum(c => (int?)c.Quantity) ?? 0,
                 Price = latestCollectionIds.Count > 0 && latestCollectionIds[0] == gc.CardCollectionId ? 3 :

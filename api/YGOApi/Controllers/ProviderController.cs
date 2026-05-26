@@ -118,7 +118,8 @@ public class ProviderController(WriteContext context, ICardProvider provider, IS
 
         cardCollection = new CardCollection()
         {
-            Name = cardList[0].CardSet
+            Name = cardList[0].CardSet,
+            Type = Data.Enums.CollectionType.COLLECTION
         };
 
         context.CardCollections.Add(cardCollection);
