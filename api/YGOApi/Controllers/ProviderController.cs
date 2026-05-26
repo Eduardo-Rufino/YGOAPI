@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.YgoProDeck;
-using YGOApi.Data.Enums;
 using YGOApi.Integrations;
 using YGOApi.Models;
 
@@ -23,14 +22,19 @@ namespace YGOApi.Controllers;
 public class ProviderController(WriteContext context, ICardProvider provider) : ControllerBase
 {
     /// <summary>
-    /// Contexto de acesso ao banco de dados para a entidade <see cref="Card"/>.
+    /// Recupera colleções e starter decks do provedor externo ordenado por lançamento.
     /// </summary>
-    private WriteContext _context = context;
+    /// <returns>
+    /// Retorna <see cref="IActionResult"/> com o conteúdo obtido do provedor.
+    /// Em caso de sucesso, responde com 200 (OK) contendo os dados retornados pelo provedor.
+    /// </returns>
+    [HttpGet("CardSets")]
+    public async Task<IActionResult> GetCardSetsByProvider()
+    {
+        var response = await provider.ListCardSets();
 
-    /// <summary>
-    /// Implementação do provedor de cartas que realiza chamadas a integrações externas.
-    /// </summary>
-    private ICardProvider _provider = provider;
+        return Ok(response);
+    }
 
     /// <summary>
     /// Recupera cartas do provedor externo pela coleção fornecida.
@@ -44,7 +48,7 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> GetCardsByProviderCollection(string collectionName)
     {
-        var response = await _provider.ListCardByCollection(collectionName);
+        var response = await provider.ListCardByCollection(collectionName);
         
         return Ok(response);
     }
@@ -64,18 +68,18 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     [Authorize(Policy = "Admin")]
     public IActionResult AddCardsCollectionProvider(int galeraId, [FromBody] List<YgoProDeckCardDto> cardList)
     {
-        CardCollection? cardCollection = _context.CardCollections.FirstOrDefault(x => x.Name == cardList[0].CardSet);
+        CardCollection? cardCollection = context.CardCollections.FirstOrDefault(x => x.Name == cardList[0].CardSet);
         if (cardCollection != null)
         {
-            if (!_context.GaleraCollections.Any(x => x.GaleraId == galeraId && x.CardCollectionId == cardCollection.Id))
+            if (!context.GaleraCollections.Any(x => x.GaleraId == galeraId && x.CardCollectionId == cardCollection.Id))
             {
-                _context.GaleraCollections.Add(new GaleraCollection()
+                context.GaleraCollections.Add(new GaleraCollection()
                 {
                     GaleraId = galeraId,
                     CardCollectionId = cardCollection.Id,
                 });
 
-                _context.SaveChanges();
+                context.SaveChanges();
 
                 return NoContent();
             }
@@ -88,21 +92,21 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
             Name = cardList[0].CardSet
         };
 
-        _context.CardCollections.Add(cardCollection);
+        context.CardCollections.Add(cardCollection);
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
         List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto, cardCollection.Id)).ToList();
 
-        _context.Cards.AddRange(cardsToInsert);
+        context.Cards.AddRange(cardsToInsert);
 
-        _context.GaleraCollections.Add(new GaleraCollection()
+        context.GaleraCollections.Add(new GaleraCollection()
         {
             GaleraId = galeraId,
             CardCollectionId = cardCollection.Id,
         });
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
         return NoContent();
     }
