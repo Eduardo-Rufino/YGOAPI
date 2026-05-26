@@ -52,6 +52,7 @@ public class YgoProDeckAdapter : ICardProvider
             return new YgoProDeckCardSetDtos();
 
         cardSets = cardSets.OrderBy(x => x.ReleasedDate).ToList();
+        cardSets.RemoveAll(x => x.ReleasedDate == DateTime.MinValue);
 
         var starterDecks = cardSets
             .Where(x => x.SetName.StartsWith("starter deck:", StringComparison.CurrentCultureIgnoreCase) || 
@@ -59,12 +60,17 @@ public class YgoProDeckAdapter : ICardProvider
                         x.SetName.StartsWith("egyptian god deck:", StringComparison.CurrentCultureIgnoreCase))
             .ToList();
 
-        cardSets.RemoveAll(x => starterDecks.Any(s => s.SetName == x.SetName));
+        var tournamentPacks = cardSets
+            .Where(x => x.SetName.StartsWith("tournament pack ", StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+
+        cardSets.RemoveAll(x => starterDecks.Any(s => s.SetName == x.SetName) || tournamentPacks.Any(s => s.SetName == x.SetName));
 
         return new YgoProDeckCardSetDtos
         {
             Collections = cardSets,
-            StarterDecks = starterDecks
+            StarterDecks = starterDecks,
+            TournamentPacks = tournamentPacks
         };
     }
 }

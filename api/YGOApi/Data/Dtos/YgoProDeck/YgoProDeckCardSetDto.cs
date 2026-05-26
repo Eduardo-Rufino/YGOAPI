@@ -6,6 +6,7 @@ public class YgoProDeckCardSetDtos
 {
     public List<YgoProDeckCardSetDto> Collections { get; set; }
     public List<YgoProDeckCardSetDto> StarterDecks { get; set; }
+    public List<YgoProDeckCardSetDto> TournamentPacks { get; set; }
 }
 
 public class YgoProDeckCardSetDto
