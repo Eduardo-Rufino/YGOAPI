@@ -35,6 +35,7 @@ dataSourceBuilder.MapEnum<CardType>();
 dataSourceBuilder.MapEnum<UserRole>();
 dataSourceBuilder.MapEnum<ContestStage>();
 dataSourceBuilder.MapEnum<ContestType>();
+dataSourceBuilder.MapEnum<CollectionType>();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WriteContext>(opts =>
@@ -80,8 +81,6 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod()
                         .AllowAnyHeader());
 });
-
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

@@ -5,5 +5,5 @@ namespace YGOApi.Integrations;
 public interface ICardProvider
 {
     Task<YgoProDeckDto> ListCardByCollection(string colectionName);
-    Task<YgoProDeckCardSetDtos> ListCardSets();
+    Task<List<YgoProDeckCardSetDto>> ListCardSets();
 }

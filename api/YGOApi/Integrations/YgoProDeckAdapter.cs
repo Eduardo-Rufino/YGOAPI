@@ -41,7 +41,7 @@ public class YgoProDeckAdapter : ICardProvider
         };
     }
 
-    public async Task<YgoProDeckCardSetDtos> ListCardSets()
+    public async Task<List<YgoProDeckCardSetDto>> ListCardSets()
     {
         var client = new HttpClient();
 
@@ -49,28 +49,11 @@ public class YgoProDeckAdapter : ICardProvider
         var cardSets = await response.Content.ReadFromJsonAsync<List<YgoProDeckCardSetDto>>();
 
         if (cardSets == null)
-            return new YgoProDeckCardSetDtos();
+            return new List<YgoProDeckCardSetDto>();
 
         cardSets = cardSets.OrderBy(x => x.ReleasedDate).ToList();
         cardSets.RemoveAll(x => x.ReleasedDate == DateTime.MinValue);
 
-        var starterDecks = cardSets
-            .Where(x => x.SetName.StartsWith("starter deck:", StringComparison.CurrentCultureIgnoreCase) || 
-                        x.SetName.StartsWith("super starter:", StringComparison.CurrentCultureIgnoreCase)|| 
-                        x.SetName.StartsWith("egyptian god deck:", StringComparison.CurrentCultureIgnoreCase))
-            .ToList();
-
-        var tournamentPacks = cardSets
-            .Where(x => x.SetName.StartsWith("tournament pack ", StringComparison.CurrentCultureIgnoreCase))
-            .ToList();
-
-        cardSets.RemoveAll(x => starterDecks.Any(s => s.SetName == x.SetName) || tournamentPacks.Any(s => s.SetName == x.SetName));
-
-        return new YgoProDeckCardSetDtos
-        {
-            Collections = cardSets,
-            StarterDecks = starterDecks,
-            TournamentPacks = tournamentPacks
-        };
+        return cardSets;
     }
 }

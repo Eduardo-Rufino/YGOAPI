@@ -29,11 +29,32 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     /// Em caso de sucesso, responde com 200 (OK) contendo os dados retornados pelo provedor.
     /// </returns>
     [HttpGet("CardSets")]
-    public async Task<IActionResult> GetCardSetsByProvider()
+    public async Task<IActionResult> GetCardSetsByProvider([FromQuery] int galeraId)
     {
-        var response = await provider.ListCardSets();
+        var cardSets = await provider.ListCardSets();
 
-        return Ok(response);
+        var collectionsInDb = context.GaleraCollections.Where(x => x.GaleraId == galeraId).Select(x => x.CardCollection.Name).ToList();
+
+        cardSets.ForEach(x => x.IsActive = collectionsInDb.Any(c => c == x.SetName));
+
+        var starterDecks = cardSets
+            .Where(x => x.SetName.StartsWith("starter deck:", StringComparison.CurrentCultureIgnoreCase) ||
+                        x.SetName.StartsWith("super starter:", StringComparison.CurrentCultureIgnoreCase) ||
+                        x.SetName.StartsWith("egyptian god deck:", StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+
+        var tournamentPacks = cardSets
+            .Where(x => x.SetName.StartsWith("tournament pack ", StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+
+        cardSets.RemoveAll(x => starterDecks.Any(s => s.SetName == x.SetName) || tournamentPacks.Any(s => s.SetName == x.SetName));
+
+        return Ok(new YgoProDeckCardSetDtos()
+        {
+            Collections = cardSets,
+            StarterDecks = starterDecks,
+            TournamentPacks = tournamentPacks
+        });
     }
 
     /// <summary>
