@@ -140,23 +140,32 @@ public class ProviderController(WriteContext context, ICardProvider provider, IS
     }
 
 
-    [HttpPost("AddCardToStorage")]
-    
-    public async Task<IActionResult> AddCardsToStorage(string cardUrl)
+    [HttpPost("AtualizarCardsDb")]
+    public async Task<IActionResult> AtualizarCardsDb(string cardUrl)
     {
-        //baixar imagem pela url
-        HttpClient httpClient = new HttpClient();
+        var cards = context.Cards.ToList();
 
-        // Baixa a imagem como stream
-        var imageStream = await httpClient.GetStreamAsync(cardUrl);
+        foreach (var card in cards)
+        {
+            //baixar imagem pela url
+            HttpClient httpClient = new HttpClient();
 
-        // Converte para StreamContent
-        var streamContent = new StreamContent(imageStream);
+            // Baixa a imagem como stream
+            var imageStream = await httpClient.GetStreamAsync(cardUrl);
 
-        // Opcional: definir content-type
-        streamContent.Headers.ContentType =
-            new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+            // Converte para StreamContent
+            var streamContent = new StreamContent(imageStream);
 
-        return Ok(storage.Upload(streamContent, "card_image.png", "cards"));
+            // Opcional: definir content-type
+            streamContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+
+            card.ImageUrlSmall = storage.Upload(streamContent, $"{card.Passcode}_{card.Name}", "cards").ToString();
+        };
+
+        context.UpdateRange(cards);
+        context.SaveChanges();
+
+        return Ok();
     }
 }
