@@ -59,7 +59,7 @@ public class YgoProDeckAdapter : ICardProvider
                         x.SetName.StartsWith("egyptian god deck:", StringComparison.CurrentCultureIgnoreCase))
             .ToList();
 
-        cardSets.RemoveAll(x => !starterDecks.Any(s => s.SetName == x.SetName));
+        cardSets.RemoveAll(x => starterDecks.Any(s => s.SetName == x.SetName));
 
         return new YgoProDeckCardSetDtos
         {
