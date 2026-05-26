@@ -63,7 +63,7 @@ public class CardController : ControllerBase
                 Collection = x.card.CardCollection.Name,
                 BanStatus = CardBanStatus.UNLIMITED,
                 Id = x.card.Id,
-                ImageUrl = x.card.ImageUrl,
+                ImageUrl = x.card.ImageUrlSmall,
                 ImageUrlSmall = x.card.ImageUrlSmall,
                 Level = x.card.Level,
                 LinkMarkers = x.card.LinkMarkers,

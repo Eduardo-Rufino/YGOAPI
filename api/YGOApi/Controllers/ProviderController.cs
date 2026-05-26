@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.YgoProDeck;
-using YGOApi.Data.Enums;
 using YGOApi.Integrations;
 using YGOApi.Models;
+using YGOApi.Services.Storage;
 
 namespace YGOApi.Controllers;
 
@@ -20,17 +20,49 @@ namespace YGOApi.Controllers;
 /// </remarks>
 [ApiController]
 [Route("[controller]")]
-public class ProviderController(WriteContext context, ICardProvider provider) : ControllerBase
+public class ProviderController(WriteContext context, ICardProvider provider, IStorageService storage) : ControllerBase
 {
     /// <summary>
-    /// Contexto de acesso ao banco de dados para a entidade <see cref="Card"/>.
+    /// Recupera colleções e starter decks do provedor externo ordenado por lançamento.
     /// </summary>
-    private WriteContext _context = context;
+    /// <returns>
+    /// Retorna <see cref="IActionResult"/> com o conteúdo obtido do provedor.
+    /// Em caso de sucesso, responde com 200 (OK) contendo os dados retornados pelo provedor.
+    /// </returns>
+    [HttpGet("CardSets")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> GetCardSetsByProvider([FromQuery] int galeraId)
+    {
+        var cardSets = await provider.ListCardSets();
 
-    /// <summary>
-    /// Implementação do provedor de cartas que realiza chamadas a integrações externas.
-    /// </summary>
-    private ICardProvider _provider = provider;
+        var collectionsInDb = context.GaleraCollections.Where(x => x.GaleraId == galeraId).Select(x => x.CardCollection.Name).ToList();
+
+        cardSets.ForEach(x => x.IsActive = collectionsInDb.Any(c => c == x.SetName));
+
+        var starterDecks = cardSets
+            .Where(x => x.SetName.StartsWith("starter deck:", StringComparison.CurrentCultureIgnoreCase) ||
+                        x.SetName.StartsWith("super starter:", StringComparison.CurrentCultureIgnoreCase) ||
+                        x.SetName.StartsWith("egyptian god deck:", StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+
+        var tournamentPacks = cardSets
+            .Where(x => 
+                x.SetName.StartsWith("tournament pack ", StringComparison.CurrentCultureIgnoreCase) ||
+                x.SetName.StartsWith("tournament pack:", StringComparison.CurrentCultureIgnoreCase))
+            .ToList();
+
+        cardSets.RemoveAll(
+            x => starterDecks.Any(s => s.SetName == x.SetName) || 
+            tournamentPacks.Any(s => s.SetName == x.SetName));
+
+
+        return Ok(new YgoProDeckCardSetDtos()
+        {
+            Collections = cardSets,
+            StarterDecks = starterDecks,
+            TournamentPacks = tournamentPacks
+        });
+    }
 
     /// <summary>
     /// Recupera cartas do provedor externo pela coleção fornecida.
@@ -44,7 +76,7 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> GetCardsByProviderCollection(string collectionName)
     {
-        var response = await _provider.ListCardByCollection(collectionName);
+        var response = await provider.ListCardByCollection(collectionName);
         
         return Ok(response);
     }
@@ -52,6 +84,7 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     /// <summary>
     /// Converte uma lista de DTOs do YgoProDeck para entidades <see cref="Card"/> e persiste no banco.
     /// </summary>
+    /// <param name="galeraId">Id da galera.</param>
     /// <param name="cardList">Lista de <see cref="YgoProDeckCardDto"/> recebida no corpo da requisição.</param>
     /// <returns>
     /// Retorna 204 (NoContent) quando as cartas são persistidas com sucesso.
@@ -64,18 +97,18 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
     [Authorize(Policy = "Admin")]
     public IActionResult AddCardsCollectionProvider(int galeraId, [FromBody] List<YgoProDeckCardDto> cardList)
     {
-        CardCollection? cardCollection = _context.CardCollections.FirstOrDefault(x => x.Name == cardList[0].CardSet);
+        CardCollection? cardCollection = context.CardCollections.FirstOrDefault(x => x.Name == cardList[0].CardSet);
         if (cardCollection != null)
         {
-            if (!_context.GaleraCollections.Any(x => x.GaleraId == galeraId && x.CardCollectionId == cardCollection.Id))
+            if (!context.GaleraCollections.Any(x => x.GaleraId == galeraId && x.CardCollectionId == cardCollection.Id))
             {
-                _context.GaleraCollections.Add(new GaleraCollection()
+                context.GaleraCollections.Add(new GaleraCollection()
                 {
                     GaleraId = galeraId,
                     CardCollectionId = cardCollection.Id,
                 });
 
-                _context.SaveChanges();
+                context.SaveChanges();
 
                 return NoContent();
             }
@@ -85,25 +118,56 @@ public class ProviderController(WriteContext context, ICardProvider provider) : 
 
         cardCollection = new CardCollection()
         {
-            Name = cardList[0].CardSet
+            Name = cardList[0].CardSet,
+            Type = Data.Enums.CollectionType.COLLECTION
         };
 
-        _context.CardCollections.Add(cardCollection);
+        context.CardCollections.Add(cardCollection);
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
         List<Card> cardsToInsert = cardList.Select(dto => CardFactory.CreateCardFromYgoProDeckDto(dto, cardCollection.Id)).ToList();
 
-        _context.Cards.AddRange(cardsToInsert);
+        context.Cards.AddRange(cardsToInsert);
 
-        _context.GaleraCollections.Add(new GaleraCollection()
+        context.GaleraCollections.Add(new GaleraCollection()
         {
             GaleraId = galeraId,
             CardCollectionId = cardCollection.Id,
         });
 
-        _context.SaveChanges();
+        context.SaveChanges();
 
         return NoContent();
+    }
+
+
+    [HttpPost("AtualizarCardsDb")]
+    public async Task<IActionResult> AtualizarCardsDb()
+    {
+        var cards = context.Cards.ToList();
+
+        foreach (var card in cards)
+        {
+            //baixar imagem pela url
+            HttpClient httpClient = new HttpClient();
+
+            // Baixa a imagem como stream
+            var imageStream = await httpClient.GetStreamAsync(card.ImageUrlSmall);
+
+            // Converte para StreamContent
+            var streamContent = new StreamContent(imageStream);
+
+            // Opcional: definir content-type
+            streamContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+
+            card.ImageUrlSmall = storage.Upload(streamContent, $"{card.Passcode}_{card.Name}", "cards").ToString();
+        };
+
+        context.UpdateRange(cards);
+        context.SaveChanges();
+
+        return Ok();
     }
 }
