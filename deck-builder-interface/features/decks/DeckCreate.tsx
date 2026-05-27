@@ -42,9 +42,11 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   const [deckName, setDeckName] = useState('');
   const [mainDeck, setMainDeck] = useState<Card[]>([]);
   const [extraDeck, setExtraDeck] = useState<Card[]>([]);
+  const [sideDeck, setSideDeck] = useState<Card[]>([]);
   const [deckCover, setDeckCover] = useState<string | null>(null);
   const [isSelectingCover, setIsSelectingCover] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
 
   // Auto-save key
@@ -99,6 +101,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
   const [selectedCollection, setSelectedCollection] = useState('');
   const [showFullDatabase, setShowFullDatabase] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [draggedCardInfo, setDraggedCardInfo] = useState<{ card: Card, source: 'database' | 'main' | 'side' | 'extra', index: number } | null>(null);
 
   // Advanced Filters State
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -251,14 +254,15 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     setFilterBanStatus(''); setFilterLinkRating(''); setFilterLinkMarkers([]);
   };
 
-  const addCardToDeck = (card: Card) => {
+  const addCardToDeck = (card: Card, addToSide?: boolean) => {
     const ownedQuantity = card.quantity || 0;
 
-    // 2. Check current count in deck (Main + Extra)
+    // 2. Check current count in deck (Main + Extra + Side)
     const countInMain = mainDeck.filter(c => c.name === card.name).length;
     const countInExtra = extraDeck.filter(c => c.name === card.name).length;
-    const totalInDeck = countInMain + countInExtra;
-    
+    const countInSide = sideDeck.filter(c => c.name === card.name).length;
+    const totalInDeck = countInMain + countInExtra + countInSide;
+
     // 3. Rule check: Game limit (3) and Banlist
     let maxAllowed = 3;
     if (card.banStatus === 3) maxAllowed = 0; // Banida
@@ -275,7 +279,6 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     }
 
     // 4. Ownership check: Personal limit
-    // We only allow adding cards if the user is NOT in "Show Full Database" mode
     if (showFullDatabase) {
       showNotification('Modo Banco Global: Adicione esta carta à sua coleção primeiro para usá-la no deck.', 'error');
       return;
@@ -286,13 +289,24 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
       return;
     }
 
-    if (isExtraDeckCard(card)) {
+    // Determine target based on side flag (right-click) – fallback to false
+    const targetSide = typeof addToSide === 'boolean' ? addToSide : false;
+    if (targetSide) {
+      // Add to Side Deck
+      if (sideDeck.length >= 15) {
+        showNotification('O Side Deck já possui o limite de 15 cartas!', 'error');
+        return;
+      }
+      setSideDeck(sortCards([...sideDeck, card]));
+    } else if (isExtraDeckCard(card)) {
+      // Add to Extra Deck
       if (extraDeck.length >= 15) {
         showNotification('O Extra Deck já possui o limite de 15 cartas!', 'error');
         return;
       }
       setExtraDeck(sortCards([...extraDeck, card]));
     } else {
+      // Add to Main Deck
       if (mainDeck.length >= 60) {
         showNotification('O Main Deck já possui o limite de 60 cartas!', 'error');
         return;
@@ -324,10 +338,10 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     setExtraDeck(sortCards(newDeck));
   };
 
-  const totalCards = mainDeck.length + extraDeck.length;
+  const totalCards = mainDeck.length + extraDeck.length + sideDeck.length;
 
   const copyToClipboard = () => {
-    if (mainDeck.length === 0 && extraDeck.length === 0) {
+    if (mainDeck.length === 0 && extraDeck.length === 0 && sideDeck.length === 0) {
       showNotification('O deck está vazio!', 'error');
       return;
     }
@@ -343,6 +357,9 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     });
 
     ydkContent += '!side\n';
+    sideDeck.forEach(card => {
+      ydkContent += `${card.passcode}\n`;
+    });
 
     navigator.clipboard.writeText(ydkContent).then(() => {
       showNotification('YDK copiado para a área de transferência!', 'success');
@@ -352,7 +369,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     });
   };
 
-  const canSave = mainDeck.length >= 40 && mainDeck.length <= 60 && extraDeck.length <= 15 && deckName.trim() !== '';
+  const canSave = mainDeck.length >= 40 && mainDeck.length <= 60 && extraDeck.length <= 15 && sideDeck.length <= 15 && deckName.trim() !== '';
 
   const handleSave = async () => {
     if (!canSave) {
@@ -362,7 +379,12 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     }
     setIsSaving(true);
     try {
-      await deckService.saveDeck(deckName, [...mainDeck, ...extraDeck], currentDeckId || undefined, deckCover);
+      const allCards = [
+        ...mainDeck.map(c => ({ ...c, section: 'main' })),
+        ...extraDeck.map(c => ({ ...c, section: 'extra' })),
+        ...sideDeck.map(c => ({ ...c, section: 'side' }))
+      ];
+      await deckService.saveDeck(deckName, allCards, currentDeckId || undefined, deckCover);
       
       // Clear draft on success
       if (!initialDeckId) {
@@ -389,7 +411,7 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     router.push('/decks');
   };
 
-  const isHoveredInDeck = hoveredCard && (mainDeck.some(c => c.id === hoveredCard.id) || extraDeck.some(c => c.id === hoveredCard.id));
+  const isHoveredInDeck = hoveredCard && (mainDeck.some(c => c.id === hoveredCard.id) || extraDeck.some(c => c.id === hoveredCard.id) || sideDeck.some(c => c.id === hoveredCard.id));
 
   return (
     <div className={styles.container}>
@@ -455,6 +477,8 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
             />
+
+
             <label className={`${styles.checkboxGroup} ${showFullDatabase ? styles.checkboxActive : ''}`}>
               <input 
                 type="checkbox" 
@@ -756,7 +780,27 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
         {/* Bottom Center: Deck Sections */}
         <div className={styles.deckSection}>
           <div className={styles.mainDeckContainer}>
-            <section>
+            <section
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedCardInfo) {
+                  if (draggedCardInfo.source === 'database') {
+                    addCardToDeck(draggedCardInfo.card, false);
+                  } else if (draggedCardInfo.source === 'side' && !isExtraDeckCard(draggedCardInfo.card)) {
+                    if (mainDeck.length >= 60) {
+                      showNotification('O Main Deck já possui o limite de 60 cartas!', 'error');
+                      return;
+                    }
+                    const newSide = [...sideDeck];
+                    newSide.splice(draggedCardInfo.index, 1);
+                    setSideDeck(newSide);
+                    setMainDeck(sortCards([...mainDeck, draggedCardInfo.card]));
+                  }
+                  setDraggedCardInfo(null);
+                }
+              }}
+            >
               <h3 className={styles.subSectionTitle}>
                 Main Deck
                 <span className={`${styles.counterBadge} ${mainDeck.length < 40 ? styles.counterBadgeWarning : ''}`}>
@@ -768,6 +812,9 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                   <div 
                     key={`main-${idx}`} 
                     className={`${styles.cardItem} ${styles.cardItemDeck}`} 
+                    draggable
+                    onDragStart={() => setDraggedCardInfo({ card, source: 'main', index: idx })}
+                    onDragEnd={() => setDraggedCardInfo(null)}
                     onClick={() => removeFromMain(idx)}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
@@ -782,7 +829,27 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
           </div>
 
           <div className={styles.extraDeckContainer}>
-            <section>
+            <section
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedCardInfo) {
+                  if (draggedCardInfo.source === 'database') {
+                    addCardToDeck(draggedCardInfo.card, false);
+                  } else if (draggedCardInfo.source === 'side' && isExtraDeckCard(draggedCardInfo.card)) {
+                    if (extraDeck.length >= 15) {
+                      showNotification('O Extra Deck já possui o limite de 15 cartas!', 'error');
+                      return;
+                    }
+                    const newSide = [...sideDeck];
+                    newSide.splice(draggedCardInfo.index, 1);
+                    setSideDeck(newSide);
+                    setExtraDeck(sortCards([...extraDeck, draggedCardInfo.card]));
+                  }
+                  setDraggedCardInfo(null);
+                }
+              }}
+            >
               <h3 className={styles.subSectionTitle}>
                 Extra Deck
                 <span className={styles.counterBadge}>
@@ -794,7 +861,72 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                   <div 
                     key={`extra-${idx}`} 
                     className={`${styles.cardItem} ${styles.cardItemDeck}`} 
+                    draggable
+                    onDragStart={() => setDraggedCardInfo({ card, source: 'extra', index: idx })}
+                    onDragEnd={() => setDraggedCardInfo(null)}
                     onClick={() => removeFromExtra(idx)}
+                    onMouseEnter={() => setHoveredCard(card)}
+                  >
+                    {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
+                    {card.banStatus === 2 && <div className={`${styles.banBadge} ${styles.limitedBadge}`}>1</div>}
+                    {card.banStatus === 1 && <div className={`${styles.banBadge} ${styles.semiLimitedBadge}`}>2</div>}
+                    <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className={styles.sideDeckContainer}>
+            <section
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedCardInfo) {
+                  if (draggedCardInfo.source === 'database') {
+                    addCardToDeck(draggedCardInfo.card, true);
+                  } else if (draggedCardInfo.source === 'main') {
+                    if (sideDeck.length >= 15) {
+                      showNotification('O Side Deck já possui o limite de 15 cartas!', 'error');
+                      return;
+                    }
+                    const newMain = [...mainDeck];
+                    newMain.splice(draggedCardInfo.index, 1);
+                    setMainDeck(newMain);
+                    setSideDeck(sortCards([...sideDeck, draggedCardInfo.card]));
+                  } else if (draggedCardInfo.source === 'extra') {
+                    if (sideDeck.length >= 15) {
+                      showNotification('O Side Deck já possui o limite de 15 cartas!', 'error');
+                      return;
+                    }
+                    const newExtra = [...extraDeck];
+                    newExtra.splice(draggedCardInfo.index, 1);
+                    setExtraDeck(newExtra);
+                    setSideDeck(sortCards([...sideDeck, draggedCardInfo.card]));
+                  }
+                  setDraggedCardInfo(null);
+                }
+              }}
+            >
+              <h3 className={styles.subSectionTitle}>
+                Side Deck
+                <span className={styles.counterBadge}>
+                  {sideDeck.length} / 15
+                </span>
+              </h3>
+              <div className={styles.sideDeckGrid}>
+                {sideDeck.map((card, idx) => (
+                  <div 
+                    key={`side-${idx}`} 
+                    className={`${styles.cardItem} ${styles.cardItemDeck}`} 
+                    draggable
+                    onDragStart={() => setDraggedCardInfo({ card, source: 'side', index: idx })}
+                    onDragEnd={() => setDraggedCardInfo(null)}
+                    onClick={() => {
+                      const newSide = [...sideDeck];
+                      newSide.splice(idx, 1);
+                      setSideDeck(sortCards(newSide));
+                    }}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
                     {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
@@ -825,12 +957,15 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                 const remaining = ownedQuantity - countInMain - countInExtra;
 
                 return (
-                <div 
-                  key={`db-${idx}`} 
-                  className={`${styles.cardItem} ${styles.cardItemDatabase}`} 
-                  onClick={() => addCardToDeck(card)}
-                  onMouseEnter={() => setHoveredCard(card)}
-                >
+                  <div 
+                    key={`db-${idx}`} 
+                    className={`${styles.cardItem} ${styles.cardItemDatabase}`} 
+                    draggable
+                    onDragStart={() => setDraggedCardInfo({ card, source: 'database', index: -1 })}
+                    onDragEnd={() => setDraggedCardInfo(null)}
+                    onClick={() => addCardToDeck(card)} 
+                    onMouseEnter={() => setHoveredCard(card)} 
+                  >
                   {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
                   {card.banStatus === 2 && <div className={`${styles.banBadge} ${styles.limitedBadge}`}>1</div>}
                   {card.banStatus === 1 && <div className={`${styles.banBadge} ${styles.semiLimitedBadge}`}>2</div>}

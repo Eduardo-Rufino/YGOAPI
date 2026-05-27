@@ -81,7 +81,8 @@ public class DeckController : ControllerBase
             {
                 DeckId = deckId,
                 CardId = cardDeck.CardId,
-                Quantity = cardDeck.Quantity
+                Quantity = cardDeck.Quantity,
+                Location = cardDeck.Location
             })
             .ToList();        
 

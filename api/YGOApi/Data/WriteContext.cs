@@ -20,6 +20,7 @@ public class WriteContext : DbContext
         modelBuilder.HasPostgresEnum<ContestType>();
         modelBuilder.HasPostgresEnum<ContestStage>();
         modelBuilder.HasPostgresEnum<CollectionType>();
+        modelBuilder.HasPostgresEnum<CardLocation>();
 
         base.OnModelCreating(modelBuilder);
     }
