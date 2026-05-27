@@ -21,7 +21,9 @@ public class DeckCard
     [DefaultValue(1)]
     public int Quantity { get; set; } = 1;
 
-    
+    public CardLocation Location { get; set; } = CardLocation.MAIN_DECK;
+
+
     [ForeignKey(nameof(DeckId))]
     public virtual Deck Deck { get; set; }
         

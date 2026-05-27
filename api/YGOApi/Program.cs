@@ -39,6 +39,8 @@ dataSourceBuilder.MapEnum<UserRole>();
 dataSourceBuilder.MapEnum<ContestStage>();
 dataSourceBuilder.MapEnum<ContestType>();
 dataSourceBuilder.MapEnum<CollectionType>();
+dataSourceBuilder.MapEnum<CardLocation>();
+
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WriteContext>(opts =>
