@@ -259,9 +259,18 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
     const countInExtra = extraDeck.filter(c => c.name === card.name).length;
     const totalInDeck = countInMain + countInExtra;
     
-    // 3. Rule check: Game limit (3)
-    if (totalInDeck >= 3) {
-      showNotification(`Você já possui 3 cópias de ${card.name} no deck!`, 'error');
+    // 3. Rule check: Game limit (3) and Banlist
+    let maxAllowed = 3;
+    if (card.banStatus === 3) maxAllowed = 0; // Banida
+    else if (card.banStatus === 2) maxAllowed = 1; // Limitada
+    else if (card.banStatus === 1) maxAllowed = 2; // Semi-Limitada
+
+    if (totalInDeck >= maxAllowed) {
+      if (maxAllowed === 0) {
+        showNotification(`${card.name} é banida e não pode ser adicionada!`, 'error');
+      } else {
+        showNotification(`Limite de ${maxAllowed} cópia(s) para ${card.name} atingido!`, 'error');
+      }
       return;
     }
 
@@ -762,6 +771,9 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                     onClick={() => removeFromMain(idx)}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
+                    {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
+                    {card.banStatus === 2 && <div className={`${styles.banBadge} ${styles.limitedBadge}`}>1</div>}
+                    {card.banStatus === 1 && <div className={`${styles.banBadge} ${styles.semiLimitedBadge}`}>2</div>}
                     <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
                   </div>
                 ))}
@@ -785,6 +797,9 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                     onClick={() => removeFromExtra(idx)}
                     onMouseEnter={() => setHoveredCard(card)}
                   >
+                    {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
+                    {card.banStatus === 2 && <div className={`${styles.banBadge} ${styles.limitedBadge}`}>1</div>}
+                    {card.banStatus === 1 && <div className={`${styles.banBadge} ${styles.semiLimitedBadge}`}>2</div>}
                     <img src={card.imageUrlSmall || card.imageUrl} alt={card.name} className={styles.cardImage} />
                   </div>
                 ))}
@@ -816,6 +831,9 @@ export const DeckCreate: React.FC<DeckCreateProps> = ({ initialDeckId }) => {
                   onClick={() => addCardToDeck(card)}
                   onMouseEnter={() => setHoveredCard(card)}
                 >
+                  {card.banStatus === 3 && <div className={`${styles.banBadge} ${styles.forbiddenBadge}`}>B</div>}
+                  {card.banStatus === 2 && <div className={`${styles.banBadge} ${styles.limitedBadge}`}>1</div>}
+                  {card.banStatus === 1 && <div className={`${styles.banBadge} ${styles.semiLimitedBadge}`}>2</div>}
                   {ownedQuantity > 0 && (
                     <div className={`${styles.ownedBadge} ${remaining <= 0 ? styles.ownedBadgeZero : ''}`}>
                       x{remaining}

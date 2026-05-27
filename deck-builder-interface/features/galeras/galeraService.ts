@@ -6,6 +6,7 @@ import { authService } from '@/features/auth/authService';
 export interface Galera {
   id: number;
   name: string;
+  activeBanlistId?: number | null;
 }
 
 export interface UserGalera {
@@ -41,18 +42,42 @@ export const galeraService = {
     }));
   },
 
+  getGalera: async (id: number): Promise<Galera> => {
+    const response = await fetch(`${API_BASE_URL}/Galera/${id}`, {
+      headers: authService.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Falha ao buscar galera');
+    return await response.json();
+  },
+
   // Cria uma nova galera na API
-  createGalera: async (name: string): Promise<Galera> => {
+  createGalera: async (name: string, activeBanlistId?: number | null): Promise<Galera> => {
     const response = await fetch(`${API_BASE_URL}/Galera`, {
       method: 'POST',
       headers: {
         ...authService.getAuthHeaders(),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ Name: name }),
+      body: JSON.stringify({ Name: name, ActiveBanlistId: activeBanlistId }),
     });
     if (!response.ok) {
       throw new Error('Falha ao criar galera.');
+    }
+    return await response.json();
+  },
+
+  // Atualiza uma galera existente na API
+  updateGalera: async (id: number, name: string, activeBanlistId?: number | null): Promise<Galera> => {
+    const response = await fetch(`${API_BASE_URL}/Galera/${id}`, {
+      method: 'PUT',
+      headers: {
+        ...authService.getAuthHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ Name: name, ActiveBanlistId: activeBanlistId }),
+    });
+    if (!response.ok) {
+      throw new Error('Falha ao atualizar galera.');
     }
     return await response.json();
   },

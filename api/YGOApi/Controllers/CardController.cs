@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -39,48 +40,97 @@ public class CardController : ControllerBase
     /// <param name="take">Quantidade máxima de itens a retornar. Padrão = 50.</param>
     /// <returns>Lista de <see cref="ReadCardDto"/> representando as cartas.</returns>
     [HttpGet]
-    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] int? userId = null)
+    public IEnumerable<ReadCardResponseDto> GetCard([FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] int? userId = null, [FromQuery] int? galeraId = null)
     {
         var userName = User.FindFirst(ClaimTypes.Name)?.Value;
         var user = _context.Users.Where(x => x.UserName == userName).FirstOrDefault()
             ?? throw new UnauthorizedAccessException("User not found");
         int playerId = userId ?? user.Id;
-        var query = _context.Cards
-        .GroupJoin(
-        _context.PlayerCollections.Where(pc => pc.PlayerId == playerId),
-            card => card.Id,
-            pc => pc.CardId,
-            (card, pcGroup) => new { card, pcGroup })
-        .SelectMany(
-            x => x.pcGroup.DefaultIfEmpty(),
-            (x, pc) => new ReadCardResponseDto
-            {
-                Attack = x.card.Attack,
-                Attribute = x.card.Attribute,
-                Defense = x.card.Defense,
-                Archetype = x.card.Archetype,
-                Effect = x.card.Effect,
-                Collection = x.card.CardCollection.Name,
-                BanStatus = CardBanStatus.UNLIMITED,
-                Id = x.card.Id,
-                ImageUrl = x.card.ImageUrlSmall,
-                ImageUrlSmall = x.card.ImageUrlSmall,
-                Level = x.card.Level,
-                LinkMarkers = x.card.LinkMarkers,
-                LinkRating = x.card.LinkRating,
-                Name = x.card.Name,
-                PendulumScale = x.card.PendulumScale,
-                Race = x.card.Race,
-                SubType = x.card.SubType,
-                Type = x.card.Type,
-                Passcode = x.card.Passcode,
-                HoraDaConsulta = DateTime.Now,
-                HasCard = pc != null,
-                Quantity = pc != null ? pc.Quantity : 0
-            }
-        ).Skip(skip).Take(take);
 
-        var resultado = query.ToList();
+        // Load active banlist if galera is provided
+        HashSet<string> forbidden = new HashSet<string>();
+        HashSet<string> limited = new HashSet<string>();
+        HashSet<string> semiLimited = new HashSet<string>();
+
+        if (galeraId.HasValue)
+        {
+            var galera = _context.Galeras.Include(g => g.ActiveBanlist).FirstOrDefault(g => g.Id == galeraId.Value);
+            if (galera?.ActiveBanlist != null)
+            {
+                if (!string.IsNullOrEmpty(galera.ActiveBanlist.ForbiddenCardsIds))
+                    foreach(var id in galera.ActiveBanlist.ForbiddenCardsIds.Split(',')) forbidden.Add(id);
+                if (!string.IsNullOrEmpty(galera.ActiveBanlist.LimitedCardsIds))
+                    foreach(var id in galera.ActiveBanlist.LimitedCardsIds.Split(',')) limited.Add(id);
+                if (!string.IsNullOrEmpty(galera.ActiveBanlist.SemiLimitedCardsIds))
+                    foreach(var id in galera.ActiveBanlist.SemiLimitedCardsIds.Split(',')) semiLimited.Add(id);
+            }
+        }
+
+        // Join Player Quantities
+        var playerQuantities = _context.PlayerCollections
+            .Where(pc => pc.PlayerId == playerId)
+            .Select(pc => new { pc.CardId, pc.Quantity });
+
+        var cardWithQuantities = _context.Cards
+            .GroupJoin(playerQuantities,
+                c => c.Id,
+                pq => pq.CardId,
+                (c, pqGroup) => new { Card = c, Qty = pqGroup.Sum(x => x.Quantity) });
+
+        var groupedStats = cardWithQuantities
+            .GroupBy(x => x.Card.Passcode)
+            .Select(g => new
+            {
+                Passcode = g.Key,
+                TotalQuantity = g.Sum(x => x.Qty),
+                RepresentativeCardId = g.Min(x => x.Card.Id)
+            });
+
+        var query = from stat in groupedStats
+                    join c in _context.Cards on stat.RepresentativeCardId equals c.Id
+                    orderby stat.TotalQuantity > 0 descending, c.Name
+                    select new ReadCardResponseDto
+                    {
+                        Attack = c.Attack,
+                        Attribute = c.Attribute,
+                        Defense = c.Defense,
+                        Archetype = c.Archetype,
+                        Effect = c.Effect,
+                        Collection = "Várias", // Grouped representation
+                        BanStatus = CardBanStatus.UNLIMITED, // Default
+                        Id = c.Id,
+                        ImageUrl = c.ImageUrlSmall,
+                        ImageUrlSmall = c.ImageUrlSmall,
+                        Level = c.Level,
+                        LinkMarkers = c.LinkMarkers,
+                        LinkRating = c.LinkRating,
+                        Name = c.Name,
+                        PendulumScale = c.PendulumScale,
+                        Race = c.Race,
+                        SubType = c.SubType,
+                        Type = c.Type,
+                        Passcode = c.Passcode,
+                        HoraDaConsulta = DateTime.Now,
+                        HasCard = stat.TotalQuantity > 0,
+                        Quantity = stat.TotalQuantity
+                    };
+
+        var resultado = query.Skip(skip).Take(take).ToList();
+
+        // Map ban status dynamically
+        if (galeraId.HasValue)
+        {
+            foreach (var r in resultado)
+            {
+                string idStr = r.Id.ToString();
+                if (forbidden.Contains(idStr))
+                    r.BanStatus = CardBanStatus.BANNED;
+                else if (limited.Contains(idStr))
+                    r.BanStatus = CardBanStatus.LIMITED;
+                else if (semiLimited.Contains(idStr))
+                    r.BanStatus = CardBanStatus.SEMI_LIMITED;
+            }
+        }
 
         return resultado;
     }

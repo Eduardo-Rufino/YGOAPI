@@ -9,6 +9,7 @@ namespace YGOApi.Data.Dtos.Galera
         public int Id { get; set; }
 
         public string Name { get; set; }
+        public int? ActiveBanlistId { get; set; }
 
         public List<User> Members { get; set; }
     }

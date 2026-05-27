@@ -109,7 +109,7 @@ public class GaleraController : ControllerBase
             })
             .ToList();
 
-        return Ok(new { galera.Id, galera.Name, Members = members });
+        return Ok(new { galera.Id, galera.Name, galera.ActiveBanlistId, Members = members });
     }
 
     [HttpPost]
@@ -119,7 +119,8 @@ public class GaleraController : ControllerBase
         
         var galera = new Galera
         {
-            Name = galeraDto.Name
+            Name = galeraDto.Name,
+            ActiveBanlistId = galeraDto.ActiveBanlistId
         };
         _context.Galeras.Add(galera);
         _context.SaveChanges();
@@ -131,6 +132,21 @@ public class GaleraController : ControllerBase
             GaleraId = galera.Id,
             DuelPoints = 0
         });
+        _context.SaveChanges();
+
+        return Ok(galera);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Policy = "Admin")]
+    public IActionResult UpdateGalera(int id, [FromBody] CreateGaleraDto galeraDto)
+    {
+        var galera = _context.Galeras.FirstOrDefault(g => g.Id == id);
+        if (galera == null) return NotFound();
+
+        galera.Name = galeraDto.Name;
+        galera.ActiveBanlistId = galeraDto.ActiveBanlistId;
+        _context.Galeras.Update(galera);
         _context.SaveChanges();
 
         return Ok(galera);
