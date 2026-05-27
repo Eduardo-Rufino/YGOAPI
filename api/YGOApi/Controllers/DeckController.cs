@@ -131,7 +131,7 @@ public class DeckController : ControllerBase
                 Defense = x.Card.Defense,
                 CardName = x.Card.Name,
                 DeckName = x.Deck.Name,
-                ImageUrl = x.Card.ImageUrl,
+                ImageUrl = x.Card.ImageUrlSmall,
                 Passcode = x.Card.Passcode,
                 Quantity = x.Quantity
             })

@@ -40,4 +40,21 @@ public class YgoProDeckAdapter : ICardProvider
             _ => CardRarity.SECRET_RARE,
         };
     }
+
+    public async Task<List<YgoProDeckCardSetDto>> ListCardSets()
+    {
+        var client = new HttpClient();
+
+        var response = await client.GetAsync("https://db.ygoprodeck.com/api/v7/cardsets.php");
+        var cardSets = await response.Content.ReadFromJsonAsync<List<YgoProDeckCardSetDto>>();
+
+        if (cardSets == null)
+            return new List<YgoProDeckCardSetDto>();
+
+        cardSets = cardSets.OrderBy(x => x.ReleasedDate).ToList();
+        cardSets.RemoveAll(x => x.ReleasedDate == DateTime.MinValue);
+        cardSets.RemoveAll(x => x.SetName.Contains("promotional", StringComparison.CurrentCultureIgnoreCase));
+
+        return cardSets;
+    }
 }

@@ -19,6 +19,7 @@ public class WriteContext : DbContext
         modelBuilder.HasPostgresEnum<UserRole>();
         modelBuilder.HasPostgresEnum<ContestType>();
         modelBuilder.HasPostgresEnum<ContestStage>();
+        modelBuilder.HasPostgresEnum<CollectionType>();
 
         base.OnModelCreating(modelBuilder);
     }

@@ -13,6 +13,7 @@ using YGOApi.Models;
 using YGOApi.Services.Autenticator;
 using YGOApi.Services.Gatcha;
 using YGOApi.Services.PlayerCollection;
+using YGOApi.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,8 @@ builder.Services.AddScoped<IPlayerCollectionService, PlayerCollectionService>();
 
 builder.Services.AddScoped<IGatchaService, GatchaService>();
 
+builder.Services.AddScoped<IStorageService, StorageService>();
+
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 dataSourceBuilder.MapEnum<CardAtribute>();
 dataSourceBuilder.MapEnum<CardBanStatus>();
@@ -35,6 +38,7 @@ dataSourceBuilder.MapEnum<CardType>();
 dataSourceBuilder.MapEnum<UserRole>();
 dataSourceBuilder.MapEnum<ContestStage>();
 dataSourceBuilder.MapEnum<ContestType>();
+dataSourceBuilder.MapEnum<CollectionType>();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<WriteContext>(opts =>
@@ -80,8 +84,6 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod()
                         .AllowAnyHeader());
 });
-
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

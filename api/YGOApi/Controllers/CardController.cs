@@ -99,7 +99,7 @@ public class CardController : ControllerBase
                         Collection = "Várias", // Grouped representation
                         BanStatus = CardBanStatus.UNLIMITED, // Default
                         Id = c.Id,
-                        ImageUrl = c.ImageUrl,
+                        ImageUrl = c.ImageUrlSmall,
                         ImageUrlSmall = c.ImageUrlSmall,
                         Level = c.Level,
                         LinkMarkers = c.LinkMarkers,
