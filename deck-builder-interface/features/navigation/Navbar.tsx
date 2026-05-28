@@ -102,7 +102,7 @@ export const Navbar: React.FC = () => {
       <div className={styles.leftSection}>
         <Link href="/" className={styles.logo} onClick={closeAllMenus}>
           <span className={styles.logoIcon}>⬡</span>
-          <span className={styles.logoText}>YD2</span>
+          <span className={styles.logoText}>YDG2</span>
         </Link>
         
         <button 
