@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useNavigation } from './useNavigation';
@@ -8,54 +8,44 @@ import { authService } from '@/features/auth/authService';
 import { galeraService, Galera } from '@/features/galeras/galeraService';
 import styles from './Navbar.module.css';
 
-/**
- * Reusable Navbar component.
- * Uses the useNavigation hook for logic and authService for auth state.
- */
 export const Navbar: React.FC = () => {
   const { isActive } = useNavigation();
   const router = useRouter();
+  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [galeras, setGaleras] = useState<Galera[]>([]);
-  const [activeGaleraId, setActiveGaleraId] = useState<number | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeGalera, setActiveGalera] = useState<Galera | null>(null);
+  
+  // Dropdown states
+  const [isGaleraDropdownOpen, setIsGaleraDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const closeMenu = () => {
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  const closeAllMenus = () => {
     setIsMobileMenuOpen(false);
-    setIsDropdownOpen(false);
+    setIsGaleraDropdownOpen(false);
+    setIsUserDropdownOpen(false);
   };
 
-  // Sync auth state on mount and when localStorage changes (e.g. after login/logout)
   useEffect(() => {
     const syncAuth = () => {
       const authenticated = authService.isAuthenticated();
       setIsLoggedIn(authenticated);
       setUsername(authService.getUsername());
-      
-      const user = authService.getUser();
-      setIsAdmin(user?.role === 'ADMIN');
     };
 
     syncAuth();
-
-    // Listen for auth changes dispatched by authService (same-tab) and storage (cross-tab)
     window.addEventListener('auth-change', syncAuth);
     window.addEventListener('storage', syncAuth);
-    window.addEventListener('focus', syncAuth); // Re-validate when user returns to tab
-
-    const handleGaleraChange = () => {
-      setActiveGaleraId(galeraService.getActiveGaleraId());
-    };
-    window.addEventListener('active-galera-changed', handleGaleraChange);
+    window.addEventListener('focus', syncAuth);
 
     return () => {
       window.removeEventListener('auth-change', syncAuth);
       window.removeEventListener('storage', syncAuth);
       window.removeEventListener('focus', syncAuth);
-      window.removeEventListener('active-galera-changed', handleGaleraChange);
     };
   }, []);
 
@@ -63,187 +53,155 @@ export const Navbar: React.FC = () => {
     if (isLoggedIn) {
       galeraService.getMyGaleras().then(g => {
         setGaleras(g);
-        const currentActive = galeraService.getActiveGaleraId();
+        const currentActiveId = galeraService.getActiveGaleraId();
+        const validActive = g.find(gal => gal.id === currentActiveId);
         
-        // Se houver galeras e o ID atual não estiver na lista ou não existir, seleciona a primeira
-        const isValid = g.some(gal => gal.id === currentActive);
-        
-        if (g.length > 0 && (!currentActive || !isValid)) {
+        if (g.length > 0 && !validActive) {
           galeraService.setActiveGaleraId(g[0].id);
-        } else if (g.length === 0) {
-          galeraService.setActiveGaleraId(null);
+          setActiveGalera(g[0]);
+        } else if (validActive) {
+          setActiveGalera(validActive);
         } else {
-          setActiveGaleraId(currentActive);
+          setActiveGalera(null);
         }
       });
     } else {
       setGaleras([]);
-      setActiveGaleraId(null);
+      setActiveGalera(null);
     }
   }, [isLoggedIn]);
 
-  const handleGaleraSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value === 'new') {
-      router.push('/galeras/create');
-      return;
-    }
-    
-    if (value) {
-      galeraService.setActiveGaleraId(Number(value));
-      // Refresh current page to apply new Galera context
-      window.location.reload();
-    }
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleGaleraSelect = (id: number) => {
+    galeraService.setActiveGaleraId(id);
+    closeAllMenus();
+    window.location.reload();
   };
 
   const handleLogout = () => {
     authService.logout();
     setIsLoggedIn(false);
     setUsername(null);
-    setIsAdmin(false);
-    closeMenu();
+    closeAllMenus();
     router.push('/');
   };
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.brandGroup}>
-        <Link href="/" className={styles.logo} onClick={closeMenu}>
-          Yu-Gi-Oh! Da Galera 2.0
+      
+      {/* ── Left Side: Navigation Links ── */}
+      <div className={styles.leftSection}>
+        <Link href="/" className={styles.logo} onClick={closeAllMenus}>
+          <span className={styles.logoIcon}>⬡</span>
+          <span className={styles.logoText}>YD2</span>
         </Link>
+        
+        <button 
+          className={styles.hamburger} 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen1 : ''}`}></span>
+          <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen2 : ''}`}></span>
+          <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen3 : ''}`}></span>
+        </button>
+
+        <ul className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
+          <li>
+            <Link href="/decks" className={`${styles.navLink} ${isActive('/decks') ? styles.active : ''}`} onClick={closeAllMenus}>
+              Decks
+            </Link>
+          </li>
+          <li>
+            <Link href="/collection" className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`} onClick={closeAllMenus}>
+              Cartas
+            </Link>
+          </li>
+          <li>
+            <Link href="/gatcha" className={`${styles.navLink} ${isActive('/gatcha') ? styles.active : ''}`} onClick={closeAllMenus}>
+              Loja
+            </Link>
+          </li>
+        </ul>
+      </div>
+
+      {/* ── Center: Galera Menu ── */}
+      <div className={styles.centerSection}>
         {isLoggedIn && (
-          <select 
-            className={styles.galeraSelect} 
-            value={activeGaleraId || ''} 
-            onChange={handleGaleraSelect}
-            title="Sua Galera Ativa"
+          <div 
+            className={styles.galeraMenuWrapper}
+            onMouseEnter={() => setIsGaleraDropdownOpen(true)}
+            onMouseLeave={() => setIsGaleraDropdownOpen(false)}
           >
-            {galeras.length > 0 ? (
-              <>
-                <optgroup label="Suas Galeras">
-                  {galeras.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </optgroup>
-                <option value="new">+ Nova Galera</option>
-              </>
-            ) : (
-              <option value="new">+ Criar sua primeira Galera</option>
+            <button className={styles.galeraButton}>
+              <span className={styles.galeraIcon}>◈</span>
+              {activeGalera ? activeGalera.name : 'Selecionar Galera'}
+              <span className={styles.chevron}>▼</span>
+            </button>
+            
+            {isGaleraDropdownOpen && (
+              <div className={styles.dropdownMenu}>
+                <div className={styles.dropdownHeader}>Minhas galeras</div>
+                {galeras.map(g => (
+                  <button 
+                    key={g.id} 
+                    className={`${styles.dropdownItem} ${activeGalera?.id === g.id ? styles.dropdownItemActive : ''}`}
+                    onClick={() => handleGaleraSelect(g.id)}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+                <div className={styles.dropdownDivider}></div>
+                <Link href="/galeras/create" className={styles.dropdownItemAction} onClick={closeAllMenus}>
+                  + Criar nova
+                </Link>
+              </div>
             )}
-          </select>
+          </div>
         )}
       </div>
 
-      <button 
-        className={styles.hamburger} 
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        aria-label="Toggle menu"
-      >
-        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen1 : ''}`}></span>
-        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen2 : ''}`}></span>
-        <span className={`${styles.bar} ${isMobileMenuOpen ? styles.barOpen3 : ''}`}></span>
-      </button>
-
-      <ul className={`${styles.navLinks} ${isMobileMenuOpen ? styles.navLinksOpen : ''}`}>
-        <li>
-          <Link
-            href="/"
-            className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}
-            onClick={closeMenu}
-          >
-            Home
-          </Link>
-        </li>
-        {isAdmin && (
-          <li>
-            <Link
-              href="/admin"
-              className={`${styles.navLink} ${isActive('/admin') ? styles.active : ''}`}
-              style={{ color: '#FCD34D' }} // Gold-ish for admin
-              onClick={closeMenu}
-            >
-              Painel Admin
-            </Link>
-          </li>
-        )}
-        {isLoggedIn && (
-          <>
-            <li>
-              <Link
-                href="/decks"
-                className={`${styles.navLink} ${isActive('/decks') && !isActive('/decks/create') ? styles.active : ''}`}
-                onClick={closeMenu}
-              >
-                Decks
-              </Link>
-            </li>
-            {activeGaleraId && (
-              <li>
-                <Link
-                  href="/galeras/manage"
-                  className={`${styles.navLink} ${isActive('/galeras/manage') ? styles.active : ''}`}
-                  onClick={closeMenu}
-                >
-                  Minha Galera
-                </Link>
-              </li>
-            )}
-            <li>
-              <Link
-                href="/gatcha"
-                className={`${styles.navLink} ${isActive('/gatcha') ? styles.active : ''}`}
-                style={{ color: '#ec4899' }} // Pink/Purple for Gatcha
-                onClick={closeMenu}
-              >
-                Abrir Boosters
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/collection"
-                className={`${styles.navLink} ${isActive('/collection') ? styles.active : ''}`}
-                onClick={closeMenu}
-              >
-                Minha Coleção
-              </Link>
-            </li>
-          </>
-        )}
-
+      {/* ── Right Side: User & Auth ── */}
+      <div className={styles.rightSection}>
         {isLoggedIn ? (
-          <>
-            <li className={styles.navUser}>
-              👤 {username}
-            </li>
-            <li>
-              <button onClick={handleLogout} className={styles.logoutBtn}>
-                Sair
-              </button>
-            </li>
-          </>
+          <div className={styles.userMenuWrapper} ref={userDropdownRef}>
+            <button 
+              className={styles.userIconButton} 
+              onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              title={username || 'Usuário'}
+            >
+              <div className={styles.avatarGlow}></div>
+              <span className={styles.avatarIcon}>👤</span>
+            </button>
+            
+            {isUserDropdownOpen && (
+              <div className={`${styles.dropdownMenu} ${styles.dropdownMenuRight}`}>
+                <div className={styles.dropdownHeader}>Logado como <span className={styles.highlight}>{username}</span></div>
+                <Link href="/collection" className={styles.dropdownItem} onClick={closeAllMenus}>
+                  Minha coleção
+                </Link>
+                <div className={styles.dropdownDivider}></div>
+                <button className={styles.dropdownItemDanger} onClick={handleLogout}>
+                  Sair
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
-          <>
-            <li>
-              <Link
-                href="/login"
-                className={`${styles.navLink} ${isActive('/login') ? styles.active : ''}`}
-                onClick={closeMenu}
-              >
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/register"
-                className={`${styles.navLink} ${isActive('/register') ? styles.active : ''}`}
-                onClick={closeMenu}
-              >
-                Register
-              </Link>
-            </li>
-          </>
+          <Link href="/login" className={styles.loginBtn}>
+            Login
+          </Link>
         )}
-      </ul>
+      </div>
+      
     </nav>
   );
 };

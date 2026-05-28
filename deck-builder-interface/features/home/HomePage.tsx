@@ -1,43 +1,56 @@
 import React from 'react';
 import Link from 'next/link';
+import { GaleraSidebar } from '@/features/galeras/GaleraSidebar';
+import { ContestSidebar } from '@/features/galeras/ContestSidebar';
 import styles from './Home.module.css';
 
 export const HomePage: React.FC = () => {
   return (
-    <main className={styles.container}>
-      <div className={styles.hero}>
-        <h1 className={styles.title}>
-          Experience the <br />
-          Future of Duel.
-        </h1>
-        <p className={styles.subtitle}>
-          A minimal, feature-based navigation system built for the ultimate Duelist. 
-          Manage your decks with precision and style.
-        </p>
-        <Link href="/decks/create" className={styles.cta}>
-          Start Building
-        </Link>
-      </div>
+    <div className={styles.homeLayout}>
+      {/* ── Left Sidebar (Members) ── */}
+      <GaleraSidebar />
 
-      <div className={styles.bannersSection}>
-        <Link href="/collections" className={`${styles.bannerCard} ${styles.bannerCollections}`}>
-          <div className={styles.bannerIcon}>✦</div>
-          <h2 className={styles.bannerTitle}>Coleções Disponíveis</h2>
-          <p className={styles.bannerDesc}>Explore as últimas coleções e expanda sua biblioteca de cartas.</p>
-        </Link>
-
-        <div className={`${styles.bannerCard} ${styles.bannerBanList}`}>
-          <div className={styles.bannerIcon}>⚔</div>
-          <h2 className={styles.bannerTitle}>BanList</h2>
-          <p className={styles.bannerDesc}>Mantenha-se atualizado com as cartas proibidas e limitadas.</p>
+      {/* ── Center Content ── */}
+      <main className={styles.mainContent}>
+        <div className={styles.heroWrapper}>
+          <div className={styles.hero}>
+            <h1 className={styles.title}>
+              Dominance starts <br />
+              with <span className={styles.textGradient}>Strategy.</span>
+            </h1>
+            <p className={styles.subtitle}>
+              O ecossistema definitivo para organizar sua coleção, 
+              testar decks e competir com a sua Galera.
+            </p>
+            <Link href="/decks/create" className={styles.cta}>
+              Construir Deck
+            </Link>
+          </div>
         </div>
 
-        <div className={`${styles.bannerCard} ${styles.bannerMeta}`}>
-          <div className={styles.bannerIcon}>☯</div>
-          <h2 className={styles.bannerTitle}>Meta</h2>
-          <p className={styles.bannerDesc}>Analise as tendências do cenário competitivo e os decks do topo.</p>
+        <div className={styles.bannersSection}>
+          <Link href="/collections" className={`${styles.bannerCard} ${styles.bannerCollections}`}>
+            <div className={styles.bannerIcon}>✦</div>
+            <h2 className={styles.bannerTitle}>Coleções</h2>
+            <p className={styles.bannerDesc}>Explore pacotes de expansão e construa seu arsenal.</p>
+          </Link>
+
+          <Link href="/gatcha" className={`${styles.bannerCard} ${styles.bannerGatcha}`}>
+            <div className={styles.bannerIcon}>⟡</div>
+            <h2 className={styles.bannerTitle}>Loja (Gatcha)</h2>
+            <p className={styles.bannerDesc}>Abra boosters e tente a sorte para cartas raras.</p>
+          </Link>
+
+          <div className={`${styles.bannerCard} ${styles.bannerMeta}`}>
+            <div className={styles.bannerIcon}>☯</div>
+            <h2 className={styles.bannerTitle}>Metagame</h2>
+            <p className={styles.bannerDesc}>Acompanhe o formato e a banlist da sua Galera.</p>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+
+      {/* ── Right Sidebar (Tournaments) ── */}
+      <ContestSidebar />
+    </div>
   );
 };

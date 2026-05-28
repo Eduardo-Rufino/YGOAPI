@@ -29,12 +29,12 @@
   --text-muted: #94A3B8;
 
   /* ── Backward compat aliases ── */
-  --primary: #3B82F6;
-  --secondary: #06B6D4;
-  --neutral: #131C2E;
-  --support: #9333EA;
-  --background: #070B14;
-  --foreground: #F8FAFC;
+  --primary: var(--neon-blue);
+  --secondary: var(--neon-cyan);
+  --neutral: var(--card-bg);
+  --support: var(--neon-purple-vibrant);
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
 }
 
 @theme inline {
@@ -65,12 +65,30 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0D1321;
+  background: var(--bg-secondary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #243B63;
+  background: var(--card-border);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B82F6;
+  background: var(--neon-blue);
+}
+
+/* Glow utilities */
+.glow-primary {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4), 0 0 30px rgba(124, 58, 237, 0.25);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4), 0 0 30px rgba(124, 58, 237, 0.25);
+  border-color: var(--neon-blue);
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
