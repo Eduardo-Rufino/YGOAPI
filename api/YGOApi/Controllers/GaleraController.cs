@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using YGOApi.Data;
 using YGOApi.Data.Dtos.Galera;
+using YGOApi.Data.Enums;
 using YGOApi.Models;
 
 namespace YGOApi.Controllers;

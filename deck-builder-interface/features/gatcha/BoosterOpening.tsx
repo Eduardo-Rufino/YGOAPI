@@ -156,7 +156,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
       const cards = await cardsPromise;
       setOpenedCards(cards);
       // Espera o rasgo completar antes de mostrar as cartas
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       setShowResults(true);
       // Refresh stock info and points

@@ -123,7 +123,7 @@ public class GatchaController : ControllerBase
         User? user = _context.Users.FirstOrDefault(x => x.UserName == userName)
             ?? throw new UnauthorizedAccessException("User not found");
 
-        var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId && Type == CollectionType.STARTER_DECK);
+        var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId && x.Type == CollectionType.STARTER_DECK);
         if (collection == null)
         {
             return BadRequest("O starter deck citado não existe");
@@ -147,6 +147,11 @@ public class GatchaController : ControllerBase
         _context.UserGalera.Update(userGalera);
 
         var cardsToAdd = _context.Cards.Where(x => x.CollectionId == collectionId).ToList();
+
+        if (cardsToAdd.Count == 0)
+        {
+            return BadRequest("Este starter deck não possui cartas disponíveis.");
+        }
 
         _playerCollectionService.AddCards(user.Id, cardsToAdd.Select(c => new UpdatePlayerCollectionDto { CardId = c.Id, Quantity = 1 }).ToList());
 
