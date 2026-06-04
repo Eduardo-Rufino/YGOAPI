@@ -156,7 +156,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
       const cards = await cardsPromise;
       setOpenedCards(cards);
       // Espera o rasgo completar antes de mostrar as cartas
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       setShowResults(true);
       // Refresh stock info and points
@@ -477,7 +477,8 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                             {getRarityName(rarityLevel)}
                           </span>
                           <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                            {group.length} carta{group.length !== 1 ? 's' : ''} · {group.reduce((sum, c) => sum + (c.quantity ?? 0), 0)} cópias disponíveis
+                            {group.length} carta{group.length !== 1 ? 's' : ''}
+                            {isStarterDeckView ? '' : ` - ${group.reduce((sum, c) => sum + (c.quantity ?? 0), 0)} disponíveis`}
                           </span>
                         </div>
 
@@ -490,7 +491,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                                   position: 'absolute',
                                   top: '6px',
                                   left: '6px',
-                                  background: (card.quantity ?? 0) > 0 ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)',
+                                  background: isStarterDeckView ? 'rgba(16,185,129,0.9)' : (card.quantity ?? 0) > 0 ? 'rgba(16,185,129,0.9)' : 'rgba(239,68,68,0.9)',
                                   color: '#fff',
                                   fontWeight: 900,
                                   fontSize: '0.75rem',
@@ -506,7 +507,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                                   src={card.imageUrl}
                                   alt={card.name}
                                   onError={(e) => { (e.target as HTMLImageElement).src = '/CardBack.jpg'; }}
-                                  style={{ width: '100%', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: (card.quantity ?? 0) === 0 ? 0.4 : 1 }}
+                                  style={{ width: '100%', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', opacity: isStarterDeckView ? 1 : (card.quantity ?? 0) === 0 ? 0.4 : 1 }}
                                 />
                               </div>
                               <div style={{ fontSize: '0.75rem', color: '#cbd5e1', textAlign: 'center', fontWeight: 500 }}>{card.name}</div>
