@@ -69,7 +69,7 @@ public class GatchaController : ControllerBase
         User? user = _context.Users.FirstOrDefault(x => x.UserName == userName)
             ?? throw new UnauthorizedAccessException("User not found");
 
-        var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId);
+        var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId && x.Type == CollectionType.COLLECTION);
         if (collection == null)
         {
             return BadRequest("A coleção citada não existe");
@@ -113,6 +113,46 @@ public class GatchaController : ControllerBase
         _context.SaveChanges();
 
         var resultDtos = _mapper.Map<List<ReadCardResponseDto>>(sortedCards);
+        return Ok(resultDtos);
+    }
+
+    [HttpGet("OpenStarterDeck/{collectionId}/{galeraId}")]
+    public IActionResult OpenStarterDeck(int collectionId, int galeraId)
+    {
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+        User? user = _context.Users.FirstOrDefault(x => x.UserName == userName)
+            ?? throw new UnauthorizedAccessException("User not found");
+
+        var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId && Type == CollectionType.STARTER_DECK);
+        if (collection == null)
+        {
+            return BadRequest("O starter deck citado não existe");
+        }
+
+        // Buscar os pontos do usuário nesta galera específica
+        var userGalera = _context.UserGalera.FirstOrDefault(ug => ug.UserId == user.Id && ug.GaleraId == galeraId);
+        if (userGalera == null)
+        {
+            return BadRequest("O usuário não faz parte desta Galera.");
+        }
+
+        int price = 20;
+
+        if (userGalera.DuelPoints < price)
+        {
+            return BadRequest($"Você não possui pontos suficientes nesta Galera. Preço: {price}, Saldo: {userGalera.DuelPoints}");
+        }
+
+        userGalera.DuelPoints -= price;
+        _context.UserGalera.Update(userGalera);
+
+        var cardsToAdd = _context.Cards.Where(x => x.CollectionId == collectionId).ToList();
+
+        _playerCollectionService.AddCards(user.Id, cardsToAdd.Select(c => new UpdatePlayerCollectionDto { CardId = c.Id, Quantity = 1 }).ToList());
+
+        _context.SaveChanges();
+
+        var resultDtos = _mapper.Map<List<ReadCardResponseDto>>(cardsToAdd);
         return Ok(resultDtos);
     }
 

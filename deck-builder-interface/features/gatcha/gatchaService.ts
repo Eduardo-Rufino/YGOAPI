@@ -20,6 +20,19 @@ export const gatchaService = {
     return await response.json();
   },
 
+  openStarterDeck: async (collectionId: number, galeraId: number): Promise<Card[]> => {
+    const response = await fetch(`${API_BASE_URL}/Gatcha/OpenStarterDeck/${collectionId}/${galeraId}`, {
+      headers: {
+        ...authService.getAuthHeaders(),
+      }
+    });
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || 'Erro ao abrir booster');
+    }
+    return await response.json();
+  },
+
   /**
    * Opens a box (24 boosters) from a collection.
    * Does NOT decrement global stock.

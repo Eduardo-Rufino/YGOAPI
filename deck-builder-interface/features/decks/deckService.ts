@@ -190,17 +190,17 @@ export const deckService = {
     }
   },
 
-  getStarterDecksInfo: async (): Promise<{ points: number; collections: CollectionInfo[] }> => {
+  getStarterDecksInfo: async (): Promise<{ collections: CollectionInfo[] }> => {
     try {
       const galeraId = galeraService.getActiveGaleraId();
-      if (!galeraId) return { points: 0, collections: [] };
+      if (!galeraId) return { collections: [] };
 
       const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/StarterDeck`, {
         headers: {
           ...authService.getAuthHeaders(),
         }
       });
-      if (!response.ok) return { points: 0, collections: [] };
+      if (!response.ok) return { collections: [] };
       const data = await response.json();
       
       const cols = data.collections || data.Collections || [];
@@ -213,12 +213,11 @@ export const deckService = {
       }));
 
       return {
-        points: data.userPoints || data.UserPoints || 0,
         collections: mappedCols
       };
     } catch (error) {
       console.error('Failed to fetch collections info', error);
-      return { points: 0, collections: [] };
+      return { collections: [] };
     }
   },
 

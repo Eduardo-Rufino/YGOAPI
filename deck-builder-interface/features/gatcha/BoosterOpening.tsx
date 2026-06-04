@@ -29,6 +29,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
 
   // View Cards State
   const [showCollectionModal, setShowCollectionModal] = useState(false);
+  const [isStarterDeckView, setIsStarterDeckView] = useState(false);
   const [inspectedCollection, setInspectedCollection] = useState<CollectionInfo | null>(null);
   const [collectionCards, setCollectionCards] = useState<Card[]>([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
@@ -127,6 +128,46 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
     }
   };
 
+  const handleOpenStarterDeck = async (collection: CollectionInfo) => {
+    const galeraId = galeraService.getActiveGaleraId();
+    if (!galeraId) {
+      alert('Nenhuma Galera ativa selecionada!');
+      return;
+    }
+
+    if (userPoints < collection.price) {
+      alert(`Você não tem pontos suficientes nesta Galera! Custo: ${collection.price} pontos.`);
+      return;
+    }
+
+    setIsOpening(true);
+    setIsRipping(false);
+    setShowResults(true);
+    setActiveCollection(collection);
+    setOpenedCards([]);
+
+    try {
+      // Começa a carregar as cartas em paralelo com a animação
+      const cardsPromise = gatchaService.openStarterDeck(collection.id, galeraId);
+
+      // Espera 1.5 segundos de "suspense" (vibração)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const cards = await cardsPromise;
+      setOpenedCards(cards);
+      // Espera o rasgo completar antes de mostrar as cartas
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      setShowResults(true);
+      // Refresh stock info and points
+      loadCollections();
+    } catch (err: any) {
+      console.error('Failed to open booster', err);
+      setError(err.message || 'Erro ao abrir o booster.');
+      setIsOpening(false);
+    }
+  };
+
   const handleSelectCollection = (collection: CollectionInfo) => {
     const target = document.getElementById(`collection-${collection.id}`);
     if (target) {
@@ -145,10 +186,11 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
     setActiveCollection(null);
   };
 
-  const handleViewCards = async (collection: CollectionInfo) => {
+  const handleViewCards = async (collection: CollectionInfo, isStarterDeck: boolean) => {
     setInspectedCollection(collection);
     setShowCollectionModal(true);
     setIsLoadingCards(true);
+    setIsStarterDeckView(isStarterDeck);
     try {
       const cards = await deckService.getCollectionCards(collection.id);
       setCollectionCards(cards);
@@ -243,7 +285,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                     </div>
                   </div>
                   <div className={styles.buttonGroup}>
-                    <button className={styles.viewButton} onClick={() => handleViewCards(col)}>Ver cartas</button>
+                    <button className={styles.viewButton} onClick={() => handleViewCards(col, false)}>Ver cartas</button>
                     <button
                       className={styles.openButton}
                       onClick={() => handleOpenBooster(col)}
@@ -274,11 +316,11 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                     <p className={styles.previewMeta}> {'Sem data'}</p>
                   </div>
                   <div className={styles.buttonGroup}>
-                    <button className={styles.viewButton} onClick={() => handleViewCards(deck)}>Ver cartas</button>
+                    <button className={styles.viewButton} onClick={() => handleViewCards(deck, true)}>Ver cartas</button>
                     <button
                       className={styles.openButton}
-                      onClick={() => handleOpenBooster(deck)}
-                      disabled={deck.remainingStock < 9 || isOpening || userPoints < deck.price}
+                      onClick={() => handleOpenStarterDeck(deck)}
+                      disabled={userPoints < deck.price}
                     >
                       Abrir Deck estrutural
                     </button>
@@ -327,7 +369,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                 <div className={styles.buttonGroup}>
                   <button
                     className={styles.viewButton}
-                    onClick={() => handleViewCards(col)}
+                    onClick={() => handleViewCards(col, false)}
                   >
                     Ver Cartas Disponíveis
                   </button>
@@ -401,7 +443,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
               {isLoadingCards ? (
                 <div className={styles.loading} style={{ marginTop: '4rem' }}>
                   <div className={styles.spinner}></div>
-                  <p>Carregando cartas da coleção...</p>
+                  <p>{isStarterDeckView ? 'Carregando cartas do deck inicial...' : 'Carregando cartas da coleção...'}</p>
                 </div>
               ) : collectionCards.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -458,7 +500,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                                   boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
                                   border: '1px solid rgba(255,255,255,0.2)',
                                 }}>
-                                  {(card.quantity ?? 0) > 0 ? `x${card.quantity}` : 'Esgotado'}
+                                  {isStarterDeckView ? 1 : (card.quantity ?? 0) > 0 ? `x${card.quantity}` : 'Esgotado'}
                                 </div>
                                 <img
                                   src={card.imageUrl}
