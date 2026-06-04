@@ -195,7 +195,7 @@ export const Navbar: React.FC = () => {
                 style={{ color: '#ec4899' }} // Pink/Purple for Gatcha
                 onClick={closeMenu}
               >
-                Abrir Boosters
+                Loja
               </Link>
             </li>
             <li>

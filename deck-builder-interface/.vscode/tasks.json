@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Verify build",
+			"type": "shell",
+			"command": "npm run build",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify build cmd",
+			"type": "shell",
+			"command": "cmd /d /c npm run build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
