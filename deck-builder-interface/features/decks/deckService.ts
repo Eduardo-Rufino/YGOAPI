@@ -190,6 +190,38 @@ export const deckService = {
     }
   },
 
+  getStarterDecksInfo: async (): Promise<{ points: number; collections: CollectionInfo[] }> => {
+    try {
+      const galeraId = galeraService.getActiveGaleraId();
+      if (!galeraId) return { points: 0, collections: [] };
+
+      const response = await fetch(`${API_BASE_URL}/Galera/${galeraId}/StarterDeck`, {
+        headers: {
+          ...authService.getAuthHeaders(),
+        }
+      });
+      if (!response.ok) return { points: 0, collections: [] };
+      const data = await response.json();
+      
+      const cols = data.collections || data.Collections || [];
+      const mappedCols = cols.map((c: any) => ({
+        id: c.id || c.Id,
+        name: c.name || c.Name,
+        remainingStock: c.remainingStock || c.RemainingStock || 0,
+        price: c.price || c.Price || 1,
+        coverImageUrl: c.coverImageUrl || c.CoverImageUrl
+      }));
+
+      return {
+        points: data.userPoints || data.UserPoints || 0,
+        collections: mappedCols
+      };
+    } catch (error) {
+      console.error('Failed to fetch collections info', error);
+      return { points: 0, collections: [] };
+    }
+  },
+
   getCollectionCards: async (collectionId: number): Promise<Card[]> => {
     try {
       const galeraId = galeraService.getActiveGaleraId();

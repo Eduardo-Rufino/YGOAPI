@@ -7,8 +7,13 @@ import { galeraService } from '@/features/galeras/galeraService';
 import { Banner } from './Banner';
 import styles from './BoosterOpening.module.css';
 
-export const BoosterOpening: React.FC = () => {
+interface BoosterOpeningProps {
+  variant?: 'store' | 'collections';
+}
+
+export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store' }) => {
   const [collections, setCollections] = useState<CollectionInfo[]>([]);
+  const [starterDecks, setStarterDecks] = useState<CollectionInfo[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [availableCardsMap, setAvailableCardsMap] = useState<Record<number, number>>({});
   const [userPoints, setUserPoints] = useState<number>(0);
@@ -36,8 +41,8 @@ export const BoosterOpening: React.FC = () => {
   const loadCollections = async () => {
     setIsLoading(true);
     try {
-      const data = await deckService.getCollectionsInfo();
-      const sortedCollections = [...data.collections].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+      const collectionData = await deckService.getCollectionsInfo();
+      const sortedCollections = [...collectionData.collections].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
 
       const availability = await Promise.all(
         sortedCollections.map(async (collection) => {
@@ -47,8 +52,14 @@ export const BoosterOpening: React.FC = () => {
       );
 
       setCollections(sortedCollections);
+
+      const starterDeckData = await deckService.getStarterDecksInfo();
+      const sortedStarterDecks = [...starterDeckData.collections].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+
+      setStarterDecks(sortedStarterDecks);
+
       setAvailableCardsMap(Object.fromEntries(availability));
-      setUserPoints(data.points);
+      setUserPoints(collectionData.points);
     } catch (err) {
       console.error('Failed to load collections', err);
       setError('Erro ao carregar coleções disponíveis.');
@@ -59,8 +70,8 @@ export const BoosterOpening: React.FC = () => {
 
   const loadDecks = async () => {
     try {
-      const data = await deckService.getDecks();
-      setDecks(data);
+      const collectionData = await deckService.getDecks();
+      setDecks(collectionData);
     } catch (err) {
       console.error('Failed to load decks', err);
     }
@@ -157,10 +168,6 @@ export const BoosterOpening: React.FC = () => {
   const sortedCollections = useMemo(() => [...collections].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)), [collections]);
   const latestCollection = sortedCollections[0] ?? null;
   const previewCollections = sortedCollections.slice(0, 3);
-  const latestDecks = useMemo(
-    () => [...decks].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 3),
-    [decks]
-  );
 
   const getRarityClass = (rarity: number) => {
     switch (rarity) {
@@ -209,123 +216,136 @@ export const BoosterOpening: React.FC = () => {
 
       {error && <div className={styles.error}>{error}</div>}
 
-      <Banner collection={latestCollection} onSelectCollection={handleSelectCollection} />
+      {variant === 'store' ? (
+        <>
+          <Banner collection={latestCollection} onSelectCollection={handleSelectCollection} />
 
-      <section className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <p className={styles.sectionLabel}>Open boosters</p>
-            <h2 className={styles.sectionTitle}>As 3 últimas coleções disponíveis</h2>
-          </div>
-          <button className={styles.sectionButton} onClick={() => document.getElementById('all-collections')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-            Ver as demais
-          </button>
-        </div>
-
-        <div className={styles.previewGrid}>
-          {previewCollections.map(col => (
-            <article key={col.id} className={styles.previewCard}>
-              <img src={col.coverImageUrl || '/CardBack.jpg'} alt={col.name} className={styles.previewCover} />
-              <div className={styles.previewBody}>
-                <p className={styles.previewName}>{col.name}</p>
-                <div className={styles.metricRow}>
-                  <span className={styles.metric}>Restantes: {col.remainingStock}</span>
-                  <span className={styles.metric}>Disponíveis: {availableCardsMap[col.id] ?? 0}</span>
-                </div>
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.sectionLabel}>Open boosters</p>
+                <h2 className={styles.sectionTitle}>As 3 últimas coleções disponíveis</h2>
               </div>
-              <div className={styles.buttonGroup}>
-                <button className={styles.viewButton} onClick={() => handleViewCards(col)}>Ver cartas</button>
-                <button
-                  className={styles.openButton}
-                  onClick={() => handleOpenBooster(col)}
-                  disabled={col.remainingStock < 9 || isOpening || userPoints < col.price}
-                >
-                  Abrir booster
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+              <button className={styles.sectionButton} onClick={() => window.location.assign('/gatcha/collections')}>
+                Ver as demais
+              </button>
+            </div>
 
-      <section className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <p className={styles.sectionLabel}>Decks estruturais</p>
-            <h2 className={styles.sectionTitle}>Os decks mais recentes da sua galera</h2>
-          </div>
-          <button className={styles.sectionButton} onClick={() => window.location.assign('/decks')}>
-            Ver todos os decks
-          </button>
-        </div>
+            <div className={styles.previewGrid}>
+              {previewCollections.map(col => (
+                <article key={col.id} className={styles.previewCard}>
+                  <img src={col.coverImageUrl || '/CardBack.jpg'} alt={col.name} className={styles.previewCover} />
+                  <div className={styles.previewBody}>
+                    <p className={styles.previewName}>{col.name}</p>
+                    <div className={styles.metricRow}>
+                      <span className={styles.metric}>Restantes: {col.remainingStock}</span>
+                      <span className={styles.metric}>Disponíveis: {availableCardsMap[col.id] ?? 0}</span>
+                    </div>
+                  </div>
+                  <div className={styles.buttonGroup}>
+                    <button className={styles.viewButton} onClick={() => handleViewCards(col)}>Ver cartas</button>
+                    <button
+                      className={styles.openButton}
+                      onClick={() => handleOpenBooster(col)}
+                      disabled={col.remainingStock < 9 || isOpening || userPoints < col.price}
+                    >
+                      Abrir booster
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
 
-        <div className={styles.previewGrid}>
-          {latestDecks.map(deck => (
-            <article key={deck.id} className={styles.previewCard}>
-              <img src={deck.deckCover || '/CardBack.jpg'} alt={deck.name} className={styles.previewCover} />
-              <div className={styles.previewBody}>
-                <p className={styles.previewName}>{deck.name}</p>
-                <p className={styles.previewMeta}> {deck.cardCount ?? deck.cards?.length ?? 0} cartas · {deck.createdAt ? new Date(deck.createdAt).toLocaleDateString() : 'Sem data'}</p>
-              </div>
-              <button className={styles.viewButton} style={{ width: '100%' }} onClick={() => window.location.assign(`/decks/${deck.id}`)}>Abrir deck</button>
-            </article>
-          ))}
-          {latestDecks.length === 0 && <p className={styles.emptyState}>Nenhum deck encontrado para exibir.</p>}
-        </div>
-      </section>
-
-      <section id="all-collections" className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <p className={styles.sectionLabel}>Coleções</p>
-            <h2 className={styles.sectionTitle}>Todas as coleções disponíveis</h2>
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          {sortedCollections.map(col => (
-            <div id={`collection-${col.id}`} key={col.id} className={styles.collectionCard}>
-              <div className={styles.priceTag}>
-                {col.price} {col.price === 1 ? 'Ponto' : 'Pontos'}
-              </div>
-              {col.coverImageUrl && (
-                <div className={styles.coverWrapper}>
-                  <img src={col.coverImageUrl} alt={col.name} className={styles.coverImage} />
-                </div>
-              )}
-              <div className={styles.collectionName}>{col.name}</div>
-
-              <div className={styles.stockInfo}>
-                <span className={styles.stockLabel}>Cartas Restantes</span>
-                <span className={styles.stockCount}>{col.remainingStock}</span>
-              </div>
-
-              <div className={styles.infoRow}>
-                <span className={styles.infoPill}>Disponíveis: {availableCardsMap[col.id] ?? 0}</span>
-                <span className={styles.infoPill}>Preço: {col.price}</span>
-              </div>
-
-              <div className={styles.buttonGroup}>
-                <button
-                  className={styles.viewButton}
-                  onClick={() => handleViewCards(col)}
-                >
-                  Ver Cartas Disponíveis
-                </button>
-                <button
-                  className={styles.openButton}
-                  onClick={() => handleOpenBooster(col)}
-                  disabled={col.remainingStock < 9 || isOpening || userPoints < col.price}
-                >
-                  {col.remainingStock < 9 ? 'Esgotado' : 
-                   userPoints < col.price ? 'Pontos Insuficientes' : 
-                   'Abrir Booster'}
-                </button>
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.sectionLabel}>Decks estruturais</p>
+                <h2 className={styles.sectionTitle}>Abrir caixa de deck estrutural</h2>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+
+            <div className={styles.previewGrid}>
+              {starterDecks.map(deck => (
+                <article key={deck.id} className={styles.previewCard}>
+                  <img src={deck.coverImageUrl || '/CardBack.jpg'} alt={deck.name} className={styles.previewCover} />
+                  <div className={styles.previewBody}>
+                    <p className={styles.previewName}>{deck.name}</p>
+                    <p className={styles.previewMeta}> {'Sem data'}</p>
+                  </div>
+                  <div className={styles.buttonGroup}>
+                    <button className={styles.viewButton} onClick={() => handleViewCards(deck)}>Ver cartas</button>
+                    <button
+                      className={styles.openButton}
+                      onClick={() => handleOpenBooster(deck)}
+                      disabled={deck.remainingStock < 9 || isOpening || userPoints < deck.price}
+                    >
+                      Abrir Deck estrutural
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {starterDecks.length === 0 && <p className={styles.emptyState}>Nenhum deck encontrado para exibir.</p>}
+            </div>
+          </section>
+        </>
+      ) : (
+        <section className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionLabel}>Coleções</p>
+              <h2 className={styles.sectionTitle}>Todas as coleções disponíveis</h2>
+            </div>
+            <button className={styles.sectionButton} onClick={() => window.location.assign('/gatcha')}>
+              Voltar à loja
+            </button>
+          </div>
+
+          <div className={styles.grid}>
+            {sortedCollections.map(col => (
+              <div id={`collection-${col.id}`} key={col.id} className={styles.collectionCard}>
+                <div className={styles.priceTag}>
+                  {col.price} {col.price === 1 ? 'Ponto' : 'Pontos'}
+                </div>
+                {col.coverImageUrl && (
+                  <div className={styles.coverWrapper}>
+                    <img src={col.coverImageUrl} alt={col.name} className={styles.coverImage} />
+                  </div>
+                )}
+                <div className={styles.collectionName}>{col.name}</div>
+
+                <div className={styles.stockInfo}>
+                  <span className={styles.stockLabel}>Cartas Restantes</span>
+                  <span className={styles.stockCount}>{col.remainingStock}</span>
+                </div>
+
+                <div className={styles.infoRow}>
+                  <span className={styles.infoPill}>Disponíveis: {availableCardsMap[col.id] ?? 0}</span>
+                  <span className={styles.infoPill}>Preço: {col.price}</span>
+                </div>
+
+                <div className={styles.buttonGroup}>
+                  <button
+                    className={styles.viewButton}
+                    onClick={() => handleViewCards(col)}
+                  >
+                    Ver Cartas Disponíveis
+                  </button>
+                  <button
+                    className={styles.openButton}
+                    onClick={() => handleOpenBooster(col)}
+                    disabled={col.remainingStock < 9 || isOpening || userPoints < col.price}
+                  >
+                    {col.remainingStock < 9 ? 'Esgotado' :
+                     userPoints < col.price ? 'Pontos Insuficientes' :
+                     'Abrir Booster'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {isOpening && (
         <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && closeOverlay()}>

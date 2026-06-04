@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function GatchaPage() {
-  return <BoosterOpening />;
+  return <BoosterOpening variant="store" />;
 }
