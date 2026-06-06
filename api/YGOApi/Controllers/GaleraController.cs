@@ -222,8 +222,7 @@ public class GaleraController : ControllerBase
                 CollectionType = gc.CardCollection.Type,
                 Name = gc.CardCollection.Name,
                 RemainingStock = _context.Cards.Where(c => c.CollectionId == gc.CardCollectionId).Sum(c => (int?)c.Quantity) ?? 0,
-                Price = latestCollectionIds.Count > 0 && latestCollectionIds[0] == gc.CardCollectionId ? 3 :
-                        latestCollectionIds.Count > 1 && latestCollectionIds[1] == gc.CardCollectionId ? 2 : 1,
+                Price = 20,
                 CoverImageUrl = _context.Cards
                     .Where(c => c.CollectionId == gc.CardCollectionId && c.Type == Data.Enums.CardType.MONSTER)
                     .OrderByDescending(c => c.Attack)

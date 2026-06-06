@@ -14,7 +14,6 @@ interface BoosterOpeningProps {
 export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store' }) => {
   const [collections, setCollections] = useState<CollectionInfo[]>([]);
   const [starterDecks, setStarterDecks] = useState<CollectionInfo[]>([]);
-  const [decks, setDecks] = useState<Deck[]>([]);
   const [availableCardsMap, setAvailableCardsMap] = useState<Record<number, number>>({});
   const [userPoints, setUserPoints] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +35,6 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
 
   useEffect(() => {
     loadCollections();
-    loadDecks();
   }, []);
 
   const loadCollections = async () => {
@@ -66,15 +64,6 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
       setError('Erro ao carregar coleções disponíveis.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadDecks = async () => {
-    try {
-      const collectionData = await deckService.getDecks();
-      setDecks(collectionData);
-    } catch (err) {
-      console.error('Failed to load decks', err);
     }
   };
 
@@ -112,7 +101,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
       setOpenedCards(cards);
 
       // Inicia a animação de rasgar (0.8s no CSS)
-      setIsRipping(false); 
+      setIsRipping(false);
 
       // Espera o rasgo completar antes de mostrar as cartas
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -142,7 +131,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
 
     setIsOpening(true);
     setIsRipping(false);
-    setShowResults(true);
+    setShowResults(false);
     setActiveCollection(collection);
     setOpenedCards([]);
 
@@ -209,7 +198,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
 
   const sortedCollections = useMemo(() => [...collections].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)), [collections]);
   const latestCollection = sortedCollections[0] ?? null;
-  const previewCollections = sortedCollections.slice(0, 3);
+  const previewCollections = sortedCollections.slice(0, 4);
 
   const getRarityClass = (rarity: number) => {
     switch (rarity) {
@@ -266,7 +255,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
             <div className={styles.sectionHeader}>
               <div>
                 <p className={styles.sectionLabel}>Open boosters</p>
-                <h2 className={styles.sectionTitle}>As 3 últimas coleções disponíveis</h2>
+                <h2 className={styles.sectionTitle}>As 4 últimas coleções disponíveis</h2>
               </div>
               <button className={styles.sectionButton} onClick={() => window.location.assign('/gatcha/collections')}>
                 Ver as demais
@@ -379,8 +368,8 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
                     disabled={col.remainingStock < 9 || isOpening || userPoints < col.price}
                   >
                     {col.remainingStock < 9 ? 'Esgotado' :
-                     userPoints < col.price ? 'Pontos Insuficientes' :
-                     'Abrir Booster'}
+                      userPoints < col.price ? 'Pontos Insuficientes' :
+                        'Abrir Booster'}
                   </button>
                 </div>
               </div>
@@ -438,7 +427,7 @@ export const BoosterOpening: React.FC<BoosterOpeningProps> = ({ variant = 'store
               <h2 className={styles.title} style={{ fontSize: '1.8rem' }}>Cartas em: {inspectedCollection.name}</h2>
               <button className={styles.closeOverlay} style={{ marginTop: 0, padding: '0.5rem 1rem' }} onClick={closeCollectionModal}>Fechar</button>
             </div>
-            
+
             <div style={{ overflowY: 'auto', flex: 1, paddingRight: '1rem' }}>
               {isLoadingCards ? (
                 <div className={styles.loading} style={{ marginTop: '4rem' }}>

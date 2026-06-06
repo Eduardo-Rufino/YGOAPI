@@ -96,7 +96,8 @@ public class CardController : ControllerBase
                         Defense = c.Defense,
                         Archetype = c.Archetype,
                         Effect = c.Effect,
-                        Collection = "Várias", // Grouped representation
+                        CollectionId = c.CollectionId,
+                        Collection = c.CardCollection.Name,
                         BanStatus = CardBanStatus.UNLIMITED, // Default
                         Id = c.Id,
                         ImageUrl = c.ImageUrlSmall,

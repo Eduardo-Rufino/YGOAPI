@@ -10,6 +10,7 @@ using YGOApi.Models;
 using YGOApi.Services.Gatcha;
 using YGOApi.Services.PlayerCollection;
 using YGOApi.Data.Dtos.Card;
+using System.Data;
 
 namespace YGOApi.Controllers;
 
@@ -39,6 +40,14 @@ public class GatchaController : ControllerBase
         User? user = _context.Users.FirstOrDefault(x => x.UserName == userName)
             ?? throw new UnauthorizedAccessException("User not found");
 
+        var userGalera = _context.UserGalera.FirstOrDefault(ug => ug.UserId == user.Id)
+            ?? throw new Exception("O usuário não pertence a nenhuma Galera.");
+
+        if(userGalera.LastOpenedCollectionId != null && collectionId <= userGalera.LastOpenedCollectionId)
+        {
+            throw new Exception("Você já abriu uma caixa desta coleção ou de uma coleção mais recente. Por favor, abra caixas em ordem cronológica.");
+        }
+
         var collection = _context.CardCollections.FirstOrDefault(x => x.Id == collectionId);
         if (collection == null)
         {
@@ -57,6 +66,14 @@ public class GatchaController : ControllerBase
 
         // Persistir na coleção do jogador
         _playerCollectionService.AddCards(user.Id, sortedCards.Select(c => new UpdatePlayerCollectionDto { CardId = c.Id, Quantity = 1 }).ToList());
+
+        
+        if (userGalera != null)
+        {
+            userGalera.LastOpenedCollectionId = collectionId;
+            _context.UserGalera.Update(userGalera);
+            _context.SaveChanges();
+        }
 
         var resultDtos = _mapper.Map<List<ReadCardResponseDto>>(sortedCards);
         return Ok(resultDtos);
