@@ -17,10 +17,15 @@ public class UserGalera
 
     public int DuelPoints { get; set; } = 0;
 
+    public int? LastOpenedCollectionId { get; set; } = null;
+
     #region Foreign Keys
     [ForeignKey(nameof(GaleraId))]
     public virtual Galera Galera { get; set; }
     [ForeignKey(nameof(UserId))]
     public virtual User User { get; set; }
+
+    [ForeignKey(nameof(LastOpenedCollectionId))]
+    public virtual CardCollection LastOpenedCollection { get; set; }
     #endregion  
 }
